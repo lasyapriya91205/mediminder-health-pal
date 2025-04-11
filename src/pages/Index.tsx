@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, ArrowRight, FileText, Check, AlertCircle, CalendarPlus, Pill, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // Sample data for next medicine
 const nextMedicine = {
@@ -23,6 +25,32 @@ const getGreeting = () => {
 };
 
 const Index = () => {
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState('');
+  
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) throw error;
+          if (data && data.first_name) {
+            setFirstName(data.first_name);
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
@@ -30,7 +58,7 @@ const Index = () => {
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-4xl mx-auto animate-fade-in">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-2">
-            {getGreeting()}, <span className="text-teal-500">Sarah</span>
+            {getGreeting()}, <span className="text-teal-500">{firstName || 'User'}</span>
           </h1>
           <p className="text-slate-500 mb-8">Ready to take care of your health today?</p>
           
