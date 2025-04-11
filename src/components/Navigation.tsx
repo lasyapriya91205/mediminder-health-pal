@@ -1,9 +1,22 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Calendar, FileText, Settings, User } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Home, Calendar, FileText, Settings, User, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from "@/components/ui/button";
 
 const Navigation = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthClick = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate('/auth');
+    }
+  };
+
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-10">
       <div className="container mx-auto px-4 md:px-6">
@@ -46,12 +59,32 @@ const Navigation = () => {
               <span>Settings</span>
             </NavLink>
             
-            <NavLink to="/profile" className={({ isActive }) => 
-              isActive ? "nav-link-active" : "nav-link"
-            }>
-              <User size={18} />
-              <span>Profile</span>
-            </NavLink>
+            {user && (
+              <NavLink to="/profile" className={({ isActive }) => 
+                isActive ? "nav-link-active" : "nav-link"
+              }>
+                <User size={18} />
+                <span>Profile</span>
+              </NavLink>
+            )}
+            
+            <Button 
+              variant="ghost" 
+              className="nav-link"
+              onClick={handleAuthClick}
+            >
+              {user ? (
+                <>
+                  <LogOut size={18} />
+                  <span>Logout</span>
+                </>
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  <span>Login</span>
+                </>
+              )}
+            </Button>
           </div>
           
           <div className="md:hidden">
