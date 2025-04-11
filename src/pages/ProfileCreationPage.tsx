@@ -63,7 +63,10 @@ const ProfileCreationPage = () => {
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error checking profile:', error);
+          return;
+        }
 
         // If the user has already filled in their profile (has first name or last name), redirect to home
         if (data && (data.first_name || data.last_name) && 

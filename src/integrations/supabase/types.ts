@@ -28,7 +28,11 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           first_name: string | null
+          healthcare_provider_name: string | null
+          healthcare_provider_phone: string | null
           id: string
           last_name: string | null
           updated_at: string
@@ -36,7 +40,11 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           first_name?: string | null
+          healthcare_provider_name?: string | null
+          healthcare_provider_phone?: string | null
           id: string
           last_name?: string | null
           updated_at?: string
@@ -44,7 +52,11 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           first_name?: string | null
+          healthcare_provider_name?: string | null
+          healthcare_provider_phone?: string | null
           id?: string
           last_name?: string | null
           updated_at?: string

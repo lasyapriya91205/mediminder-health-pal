@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -19,6 +20,10 @@ const ProfilePage = () => {
     first_name: '',
     last_name: '',
     avatar_url: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+    healthcare_provider_name: '',
+    healthcare_provider_phone: ''
   });
 
   useEffect(() => {
@@ -31,7 +36,7 @@ const ProfilePage = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('first_name, last_name, avatar_url')
+          .select('first_name, last_name, avatar_url, emergency_contact_name, emergency_contact_phone, healthcare_provider_name, healthcare_provider_phone')
           .eq('id', user.id)
           .single();
 
@@ -42,6 +47,10 @@ const ProfilePage = () => {
             first_name: data.first_name || '',
             last_name: data.last_name || '',
             avatar_url: data.avatar_url || '',
+            emergency_contact_name: data.emergency_contact_name || '',
+            emergency_contact_phone: data.emergency_contact_phone || '',
+            healthcare_provider_name: data.healthcare_provider_name || '',
+            healthcare_provider_phone: data.healthcare_provider_phone || ''
           });
         }
       } catch (error: any) {
@@ -142,30 +151,30 @@ const ProfilePage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 bg-white rounded-lg border border-slate-200">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-medium text-slate-800">John Johnson</h3>
-                      <p className="text-sm text-slate-500">Relationship: Spouse</p>
+                {profileData.emergency_contact_name ? (
+                  <div className="p-4 bg-white rounded-lg border border-slate-200">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="font-medium text-slate-800">{profileData.emergency_contact_name}</h3>
+                        <p className="text-sm text-slate-500">Emergency Contact</p>
+                      </div>
+                      <Button variant="outline" size="sm" className="h-8" onClick={handleEditProfile}>Edit</Button>
                     </div>
-                    <Button variant="outline" size="sm" className="h-8">Edit</Button>
-                  </div>
-                  <Separator className="my-3" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-700">(555) 987-6543</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-700">john.johnson@example.com</span>
+                    <Separator className="my-3" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-700">{profileData.emergency_contact_phone || 'No phone provided'}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-slate-600">No emergency contacts added yet.</p>
+                )}
                 
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={handleEditProfile}>
                   <Plus size={16} />
-                  Add Emergency Contact
+                  {profileData.emergency_contact_name ? 'Edit Emergency Contact' : 'Add Emergency Contact'}
                 </Button>
               </div>
             </CardContent>
@@ -177,51 +186,30 @@ const ProfilePage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="p-4 bg-white rounded-lg border border-slate-200">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-medium text-slate-800">Dr. Michael Chen</h3>
-                      <p className="text-sm text-slate-500">Primary Care Physician</p>
+                {profileData.healthcare_provider_name ? (
+                  <div className="p-4 bg-white rounded-lg border border-slate-200">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="font-medium text-slate-800">{profileData.healthcare_provider_name}</h3>
+                        <p className="text-sm text-slate-500">Primary Care Physician</p>
+                      </div>
+                      <Button variant="outline" size="sm" className="h-8" onClick={handleEditProfile}>Edit</Button>
                     </div>
-                    <Button variant="outline" size="sm" className="h-8">Edit</Button>
-                  </div>
-                  <Separator className="my-3" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-700">Boston Medical Center</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-700">(555) 111-2222</span>
+                    <Separator className="my-3" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-700">{profileData.healthcare_provider_phone || 'No phone provided'}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-slate-600">No healthcare providers added yet.</p>
+                )}
                 
-                <div className="p-4 bg-white rounded-lg border border-slate-200">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-medium text-slate-800">Dr. Sarah Wilson</h3>
-                      <p className="text-sm text-slate-500">Cardiologist</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="h-8">Edit</Button>
-                  </div>
-                  <Separator className="my-3" />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-700">Heart & Vascular Institute</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-700">(555) 333-4444</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={handleEditProfile}>
                   <Plus size={16} />
-                  Add Healthcare Provider
+                  {profileData.healthcare_provider_name ? 'Edit Healthcare Provider' : 'Add Healthcare Provider'}
                 </Button>
               </div>
             </CardContent>
