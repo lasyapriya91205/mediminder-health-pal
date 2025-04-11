@@ -1,5 +1,5 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { User, Mail, Phone, Cake, Map, Edit2, Building, Plus, Download, Trash } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,64 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/components/ui/use-toast";
 
 const ProfilePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [profileData, setProfileData] = useState({
+    first_name: '',
+    last_name: '',
+    avatar_url: '',
+  });
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, avatar_url')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setProfileData({
+            first_name: data.first_name || '',
+            last_name: data.last_name || '',
+            avatar_url: data.avatar_url || '',
+          });
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error loading profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchProfile();
+  }, [user, navigate, toast]);
+
+  const handleEditProfile = () => {
+    navigate('/create-profile');
+  };
+
+  const fullName = `${profileData.first_name} ${profileData.last_name}`.trim();
+  const initials = fullName
+    ? `${profileData.first_name?.[0] || ''}${profileData.last_name?.[0] || ''}`.toUpperCase()
+    : 'U';
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
@@ -26,23 +82,20 @@ const ProfilePage = () => {
             <Card className="md:col-span-1">
               <CardContent className="pt-6 pb-6 flex flex-col items-center text-center">
                 <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src="https://github.com/shadcn.png" alt="Profile" />
-                  <AvatarFallback className="bg-teal-100 text-teal-800 text-xl">SJ</AvatarFallback>
+                  <AvatarImage src={profileData.avatar_url} alt="Profile" />
+                  <AvatarFallback className="bg-teal-100 text-teal-800 text-xl">{initials}</AvatarFallback>
                 </Avatar>
                 
-                <h2 className="text-xl font-medium text-slate-800 mb-1">Sarah Johnson</h2>
-                <p className="text-sm text-slate-500 mb-4">Patient ID: #38291</p>
+                <h2 className="text-xl font-medium text-slate-800 mb-1">{fullName || 'User'}</h2>
+                <p className="text-sm text-slate-500 mb-4">Patient ID: #{user?.id.substring(0, 5) || '00000'}</p>
                 
                 <div className="flex gap-2 mb-4">
                   <Badge variant="outline" className="bg-teal-50 text-teal-700 hover:bg-teal-100">
-                    Female
-                  </Badge>
-                  <Badge variant="outline" className="bg-lavender-50 text-lavender-700 hover:bg-lavender-100">
-                    42 years
+                    Patient
                   </Badge>
                 </div>
                 
-                <Button variant="outline" className="w-full gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={handleEditProfile}>
                   <Edit2 size={16} />
                   Edit Profile
                 </Button>
@@ -59,31 +112,23 @@ const ProfilePage = () => {
                     <Mail className="h-5 w-5 text-slate-400 mt-0.5" />
                     <div>
                       <h3 className="text-sm font-medium text-slate-500">Email Address</h3>
-                      <p className="text-slate-800">sarah.johnson@example.com</p>
+                      <p className="text-slate-800">{user?.email || 'Not provided'}</p>
                     </div>
                   </div>
                   
                   <div className="flex gap-3 items-start">
-                    <Phone className="h-5 w-5 text-slate-400 mt-0.5" />
+                    <User className="h-5 w-5 text-slate-400 mt-0.5" />
                     <div>
-                      <h3 className="text-sm font-medium text-slate-500">Phone Number</h3>
-                      <p className="text-slate-800">(555) 123-4567</p>
+                      <h3 className="text-sm font-medium text-slate-500">First Name</h3>
+                      <p className="text-slate-800">{profileData.first_name || 'Not provided'}</p>
                     </div>
                   </div>
                   
                   <div className="flex gap-3 items-start">
-                    <Cake className="h-5 w-5 text-slate-400 mt-0.5" />
+                    <User className="h-5 w-5 text-slate-400 mt-0.5" />
                     <div>
-                      <h3 className="text-sm font-medium text-slate-500">Date of Birth</h3>
-                      <p className="text-slate-800">May 12, 1981</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 items-start">
-                    <Map className="h-5 w-5 text-slate-400 mt-0.5" />
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-500">Address</h3>
-                      <p className="text-slate-800">123 Main Street, Apt 4B<br/>Boston, MA 02115</p>
+                      <h3 className="text-sm font-medium text-slate-500">Last Name</h3>
+                      <p className="text-slate-800">{profileData.last_name || 'Not provided'}</p>
                     </div>
                   </div>
                 </div>

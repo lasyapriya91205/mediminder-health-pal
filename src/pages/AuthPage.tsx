@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { z } from "zod";
 import Navigation from '@/components/Navigation';
+import { supabase } from '@/integrations/supabase/client';
 
 const emailSchema = z.string().email({ message: "Please enter a valid email" });
 const passwordSchema = z.string().min(6, { message: "Password must be at least 6 characters" });
@@ -18,16 +18,14 @@ const nameSchema = z.string().min(1, { message: "Name is required" });
 const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginErrors, setLoginErrors] = useState({ email: "", password: "" });
 
-  // Signup form state
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -38,6 +36,33 @@ const AuthPage = () => {
     firstName: "", 
     lastName: "" 
   });
+
+  useEffect(() => {
+    if (user) {
+      const checkProfileStatus = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+
+          if (data && (data.first_name || data.last_name)) {
+            navigate('/');
+          } else {
+            navigate('/create-profile');
+          }
+        } catch (error) {
+          console.error('Error checking profile:', error);
+          navigate('/');
+        }
+      };
+
+      checkProfileStatus();
+    }
+  }, [user, navigate]);
 
   const validateLoginForm = () => {
     let valid = true;
@@ -116,7 +141,6 @@ const AuthPage = () => {
     setIsLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
-      navigate('/');
     } catch (error) {
       // Error is handled in the context
     } finally {

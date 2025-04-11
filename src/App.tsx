@@ -10,6 +10,7 @@ import MedicinesPage from "./pages/MedicinesPage";
 import MedicalHistoryPage from "./pages/MedicalHistoryPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
+import ProfileCreationPage from "./pages/ProfileCreationPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/history" element={<MedicalHistoryPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/create-profile" element={<ProfileCreationPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
