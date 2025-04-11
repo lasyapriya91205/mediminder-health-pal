@@ -1,0 +1,105 @@
+
+import React, { useState } from 'react';
+import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface MedicineCardProps {
+  medicine: {
+    id: string;
+    name: string;
+    description: string;
+    dosage: string;
+    time: string;
+    imageUrl: string;
+  };
+  isActive: boolean;
+}
+
+const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, isActive }) => {
+  const [taken, setTaken] = useState(false);
+  const cardClass = isActive ? 'medicine-card-active' : 'medicine-card';
+  
+  const handleTakeMedicine = () => {
+    setTaken(true);
+    toast.success(`${medicine.name} marked as taken!`);
+  };
+  
+  const getStatusIcon = () => {
+    if (taken) {
+      return <CheckCircle className="text-green-500" />;
+    }
+    if (isActive) {
+      return <Clock className="text-teal-500 animate-pulse" />;
+    }
+    const [hours, minutes] = medicine.time.split(':').map(Number);
+    const medicineTime = new Date();
+    medicineTime.setHours(hours, minutes, 0);
+    
+    if (medicineTime < new Date()) {
+      return <AlertCircle className="text-amber-500" />;
+    }
+    
+    return <Clock className="text-slate-400" />;
+  };
+
+  return (
+    <div className={`${cardClass} flex flex-col md:flex-row gap-4 mb-4 ${taken ? 'opacity-70' : ''}`}>
+      <div className="md:w-1/4 flex-shrink-0">
+        <img
+          src={medicine.imageUrl || "/placeholder.svg"}
+          alt={medicine.name}
+          className="w-full h-24 object-cover rounded-lg bg-slate-100"
+        />
+      </div>
+      
+      <div className="flex-grow">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-medium text-lg text-slate-800">{medicine.name}</h3>
+            <p className="text-sm text-slate-500">{medicine.description}</p>
+          </div>
+          <div className="flex items-center">
+            {getStatusIcon()}
+          </div>
+        </div>
+        
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+            {medicine.dosage}
+          </span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-lavender-100 text-lavender-800">
+            {medicine.time}
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex-shrink-0 flex items-center">
+        <button
+          onClick={handleTakeMedicine}
+          disabled={taken}
+          className={`${
+            taken 
+              ? 'bg-green-100 text-green-500 cursor-not-allowed'
+              : 'bg-teal-50 text-teal-600 hover:bg-teal-100'
+          } px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2`}
+        >
+          {taken ? (
+            <>
+              <CheckCircle size={18} />
+              <span>Taken</span>
+            </>
+          ) : (
+            <>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 12L11 14L15 10M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Mark as Taken</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default MedicineCard;
