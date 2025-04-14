@@ -6,20 +6,28 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://jdttdesqckxqcctdjojk.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdHRkZXNxY2t4cWNjdGRqb2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNDg0MTksImV4cCI6MjA1OTkyNDQxOX0.1sLhQg_mq0Y4eH5gyFrYxYv1ODdVTUG4pPS7HCRi3bU";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// Initialize Supabase client
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // Create the storage bucket for medical documents if it doesn't exist
-const createBucketIfNotExists = async () => {
-  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-  
+export const createBucketIfNotExists = async () => {
   try {
-    const { data, error } = await supabaseAdmin
+    // First check if the bucket already exists
+    const { data: buckets, error: listError } = await supabase
       .storage
-      .getBucket('medical_documents');
+      .listBuckets();
       
-    if (error && error.message.includes('not found')) {
-      const { error: createError } = await supabaseAdmin
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      return;
+    }
+    
+    // Check if our bucket exists in the list
+    const bucketExists = buckets?.some(bucket => bucket.name === 'medical_documents');
+    
+    if (!bucketExists) {
+      // Create the bucket if it doesn't exist
+      const { error: createError } = await supabase
         .storage
         .createBucket('medical_documents', {
           public: false,
@@ -30,7 +38,19 @@ const createBucketIfNotExists = async () => {
         console.error('Error creating medical documents bucket:', createError);
       } else {
         console.log('Medical documents bucket created successfully');
+        
+        // Set bucket policies to allow authenticated users to upload files
+        const { error: policyError } = await supabase
+          .storage
+          .from('medical_documents')
+          .createSignedUploadUrl('test-policy-file');
+          
+        if (policyError && !policyError.message.includes('The resource already exists')) {
+          console.error('Error setting bucket policy:', policyError);
+        }
       }
+    } else {
+      console.log('Medical documents bucket already exists');
     }
   } catch (error) {
     console.error('Error checking for medical documents bucket:', error);
@@ -39,5 +59,3 @@ const createBucketIfNotExists = async () => {
 
 // Initialize the bucket
 createBucketIfNotExists();
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);

@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, createBucketIfNotExists } from '@/integrations/supabase/client';
 import ConditionForm from '../components/ConditionForm';
 import AllergyForm from '../components/AllergyForm';
 import SurgeryForm from '../components/SurgeryForm';
@@ -38,6 +38,8 @@ const MedicalHistoryPage = () => {
     const fetchMedicalData = async () => {
       setIsLoading(true);
       try {
+        await createBucketIfNotExists();
+        
         const { data: conditionsData, error: conditionsError } = await supabase
           .from('medical_conditions')
           .select('*')
@@ -65,16 +67,22 @@ const MedicalHistoryPage = () => {
         if (surgeriesError) throw surgeriesError;
         setSurgeries(surgeriesData || []);
         
-        const { data: documentsData, error: documentsError } = await supabase
-          .storage
-          .from('medical_documents')
-          .list(`${user.id}`);
+        try {
+          const { data: documentsData, error: documentsError } = await supabase
+            .storage
+            .from('medical_documents')
+            .list(`${user.id}`);
+            
+          if (documentsError) {
+            if (!documentsError.message.includes('The resource was not found')) {
+              throw documentsError;
+            }
+          }
           
-        if (documentsError && documentsError.message !== 'The resource was not found') {
-          throw documentsError;
+          setDocuments(documentsData || []);
+        } catch (docError) {
+          console.error('Error fetching documents:', docError);
         }
-        
-        setDocuments(documentsData || []);
         
       } catch (error: any) {
         console.error('Error fetching medical data:', error);
@@ -119,15 +127,24 @@ const MedicalHistoryPage = () => {
       setIsUploading(true);
       setUploadProgress(0);
       
+      await createBucketIfNotExists();
+      
       const filePath = `${user.id}/${selectedFile.name}`;
       
       const xhr = new XMLHttpRequest();
+      let uploadPromise: Promise<void>;
       
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const percentage = (event.loaded / event.total) * 100;
-          setUploadProgress(Math.round(percentage));
-        }
+      uploadPromise = new Promise((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentage = (event.loaded / event.total) * 100;
+            setUploadProgress(Math.round(percentage));
+          }
+        });
+        
+        xhr.addEventListener('load', () => resolve());
+        xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+        xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
       });
       
       const fileBuffer = await selectedFile.arrayBuffer();
@@ -166,7 +183,6 @@ const MedicalHistoryPage = () => {
       });
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
