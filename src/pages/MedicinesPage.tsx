@@ -17,6 +17,8 @@ const MedicinesPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [medicines, setMedicines] = useState<any[]>([]);
+  const [visibleMedicines, setVisibleMedicines] = useState<any[]>([]);
+  const [takenMedicines, setTakenMedicines] = useState<Set<string>>(new Set());
   const [activeMedicineId, setActiveMedicineId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
@@ -49,6 +51,33 @@ const MedicinesPage = () => {
         }));
         
         setMedicines(medicationsWithImages);
+        
+        // Fetch taken medications for today from medical_records
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        const { data: recordsData, error: recordsError } = await supabase
+          .from('medical_records')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('record_type', 'medication_taken')
+          .gte('created_at', todayStr);
+          
+        if (recordsError) {
+          console.error('Error fetching medication records:', recordsError);
+        } else if (recordsData) {
+          // Extract medication IDs from records taken today
+          const takenMeds = new Set(
+            recordsData
+              .filter(record => {
+                const recordDate = new Date(record.created_at).toISOString().split('T')[0];
+                return recordDate === todayStr;
+              })
+              .map(record => record.details.medication_id)
+          );
+          
+          setTakenMedicines(takenMeds);
+        }
       } catch (error) {
         console.error('Error fetching medications:', error);
         toast({
@@ -73,12 +102,18 @@ const MedicinesPage = () => {
     return () => clearInterval(interval);
   }, [user, toast]);
   
+  // Filter medicines to show only those not taken today
+  useEffect(() => {
+    const filteredMedicines = medicines.filter(med => !takenMedicines.has(med.id));
+    setVisibleMedicines(filteredMedicines);
+  }, [medicines, takenMedicines]);
+  
   // Check which medicine is active based on time
   useEffect(() => {
     const now = currentTime;
     const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     
-    const activeMed = medicines.find(med => {
+    const activeMed = visibleMedicines.find(med => {
       const [hours, minutes] = med.time.split(':').map(Number);
       const medTime = new Date(now);
       medTime.setHours(hours, minutes, 0);
@@ -91,7 +126,7 @@ const MedicinesPage = () => {
     });
     
     setActiveMedicineId(activeMed?.id || null);
-  }, [currentTime, medicines]);
+  }, [currentTime, visibleMedicines]);
   
   const formattedDate = currentTime.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -236,6 +271,13 @@ const MedicinesPage = () => {
         
       if (error) throw error;
       
+      // Update the local state to hide this medicine
+      setTakenMedicines(prev => {
+        const updated = new Set(prev);
+        updated.add(medicine.id);
+        return updated;
+      });
+      
       toast({
         title: "Medicine taken",
         description: `${medicine.name} has been marked as taken.`,
@@ -280,9 +322,9 @@ const MedicinesPage = () => {
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
                 </div>
-              ) : medicines.length > 0 ? (
+              ) : visibleMedicines.length > 0 ? (
                 <div className="space-y-4">
-                  {medicines.map(medicine => (
+                  {visibleMedicines.map(medicine => (
                     <MedicineCard 
                       key={medicine.id}
                       medicine={medicine}
@@ -292,6 +334,11 @@ const MedicinesPage = () => {
                       onTakeMedicine={() => handleMedicineTaken(medicine)}
                     />
                   ))}
+                </div>
+              ) : medicines.length > 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-green-600 font-medium">Great job! All medications for today have been taken.</p>
+                  <p className="text-sm text-slate-500 mt-1">Your next medications will appear here tomorrow.</p>
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -318,7 +365,7 @@ const MedicinesPage = () => {
       </Dialog>
       
       {/* Background component for reminders */}
-      <MedicineReminder medicines={medicines} onMedicineTaken={handleMedicineTaken} />
+      <MedicineReminder medicines={visibleMedicines} onMedicineTaken={handleMedicineTaken} />
     </div>
   );
 };
