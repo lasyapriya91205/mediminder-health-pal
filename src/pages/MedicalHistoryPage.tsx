@@ -28,11 +28,28 @@ const MedicalHistoryPage = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isBucketReady, setIsBucketReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   if (!user) {
     return <Navigate to="/auth" />;
   }
+  
+  useEffect(() => {
+    const initializeBucket = async () => {
+      const bucketCreated = await createBucketIfNotExists();
+      setIsBucketReady(bucketCreated);
+      if (!bucketCreated) {
+        toast({
+          title: "Storage setup issue",
+          description: "There was a problem setting up file storage. Some features may not work correctly.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    initializeBucket();
+  }, [toast]);
   
   useEffect(() => {
     const fetchMedicalData = async () => {
@@ -127,14 +144,16 @@ const MedicalHistoryPage = () => {
       setIsUploading(true);
       setUploadProgress(0);
       
-      await createBucketIfNotExists();
+      const bucketReady = await createBucketIfNotExists();
+      if (!bucketReady) {
+        throw new Error("File storage is not available. Please try again later.");
+      }
       
       const filePath = `${user.id}/${selectedFile.name}`;
       
       const xhr = new XMLHttpRequest();
-      let uploadPromise: Promise<void>;
       
-      uploadPromise = new Promise((resolve, reject) => {
+      const uploadPromise = new Promise<void>((resolve, reject) => {
         xhr.upload.addEventListener('progress', (event) => {
           if (event.lengthComputable) {
             const percentage = (event.loaded / event.total) * 100;
@@ -156,7 +175,12 @@ const MedicalHistoryPage = () => {
           upsert: true
         });
       
-      if (error) throw error;
+      await uploadPromise;
+      
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
+      }
       
       setUploadProgress(100);
       
@@ -805,6 +829,15 @@ const MedicalHistoryPage = () => {
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     className="hidden"
                   />
+                  
+                  {!isBucketReady && (
+                    <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-800">
+                      <p className="flex items-center gap-2">
+                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-amber-600"></span>
+                        Setting up file storage... This may take a moment.
+                      </p>
+                    </div>
+                  )}
                   
                   <div 
                     className="border-2 border-dashed border-slate-200 rounded-lg p-8 mb-4 text-center hover:bg-slate-50 transition-colors cursor-pointer"

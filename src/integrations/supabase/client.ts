@@ -19,7 +19,7 @@ export const createBucketIfNotExists = async () => {
       
     if (listError) {
       console.error('Error listing buckets:', listError);
-      return;
+      return false;
     }
     
     // Check if our bucket exists in the list
@@ -36,6 +36,7 @@ export const createBucketIfNotExists = async () => {
         
       if (createError) {
         console.error('Error creating medical documents bucket:', createError);
+        return false;
       } else {
         console.log('Medical documents bucket created successfully');
         
@@ -47,13 +48,18 @@ export const createBucketIfNotExists = async () => {
           
         if (policyError && !policyError.message.includes('The resource already exists')) {
           console.error('Error setting bucket policy:', policyError);
+          return false;
         }
+        
+        return true;
       }
     } else {
       console.log('Medical documents bucket already exists');
+      return true;
     }
   } catch (error) {
     console.error('Error checking for medical documents bucket:', error);
+    return false;
   }
 };
 
