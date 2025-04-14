@@ -1,27 +1,42 @@
 
 import React, { useState } from 'react';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { CheckCircle, Clock, AlertCircle, MoreVertical, Edit, Trash } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface MedicineCardProps {
   medicine: {
     id: string;
     name: string;
-    description: string;
+    description: string | null;
     dosage: string;
     time: string;
     imageUrl: string;
   };
   isActive: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onTakeMedicine?: () => void;
 }
 
-const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, isActive }) => {
+const MedicineCard: React.FC<MedicineCardProps> = ({ 
+  medicine, 
+  isActive, 
+  onEdit, 
+  onDelete,
+  onTakeMedicine 
+}) => {
   const [taken, setTaken] = useState(false);
-  const cardClass = isActive ? 'medicine-card-active' : 'medicine-card';
   
   const handleTakeMedicine = () => {
     setTaken(true);
-    toast.success(`${medicine.name} marked as taken!`);
+    if (onTakeMedicine) {
+      onTakeMedicine();
+    }
   };
   
   const getStatusIcon = () => {
@@ -43,7 +58,7 @@ const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, isActive }) => {
   };
 
   return (
-    <div className={`${cardClass} flex flex-col md:flex-row gap-4 mb-4 ${taken ? 'opacity-70' : ''}`}>
+    <div className={`flex flex-col md:flex-row gap-4 p-4 rounded-lg border ${taken ? 'border-green-100 bg-green-50/30' : isActive ? 'border-teal-100 bg-teal-50' : 'border-slate-100'} ${taken ? 'opacity-70' : ''}`}>
       <div className="md:w-1/4 flex-shrink-0">
         <img
           src={medicine.imageUrl || "/placeholder.svg"}
@@ -56,10 +71,31 @@ const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, isActive }) => {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-medium text-lg text-slate-800">{medicine.name}</h3>
-            <p className="text-sm text-slate-500">{medicine.description}</p>
+            <p className="text-sm text-slate-500">{medicine.description || "No description provided"}</p>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             {getStatusIcon()}
+            
+            {onEdit && onDelete && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="p-1 rounded-md hover:bg-slate-100">
+                  <MoreVertical className="h-4 w-4 text-slate-500" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={onEdit} className="flex items-center gap-2 cursor-pointer">
+                    <Edit className="h-4 w-4" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={onDelete} 
+                    className="flex items-center gap-2 text-red-500 cursor-pointer"
+                  >
+                    <Trash className="h-4 w-4" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
         
@@ -73,7 +109,7 @@ const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, isActive }) => {
         </div>
       </div>
       
-      <div className="flex-shrink-0 flex items-center">
+      <div className="flex-shrink-0 flex items-center mt-3 md:mt-0">
         <button
           onClick={handleTakeMedicine}
           disabled={taken}

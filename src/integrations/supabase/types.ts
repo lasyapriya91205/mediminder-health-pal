@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      allergies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          severity: string
+          symptoms: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          severity: string
+          symptoms?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          severity?: string
+          symptoms?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       amrutha: {
         Row: {
           created_at: string
@@ -21,6 +51,93 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+        }
+        Relationships: []
+      }
+      medical_conditions: {
+        Row: {
+          created_at: string
+          description: string | null
+          diagnosis_date: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          diagnosis_date?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          diagnosis_date?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      medical_records: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          record_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details: Json
+          id?: string
+          record_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          record_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      medications: {
+        Row: {
+          created_at: string
+          description: string | null
+          dosage: string
+          id: string
+          name: string
+          time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dosage: string
+          id?: string
+          name: string
+          time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dosage?: string
+          id?: string
+          name?: string
+          time?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -60,6 +177,42 @@ export type Database = {
           id?: string
           last_name?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      surgeries: {
+        Row: {
+          created_at: string
+          date: string
+          doctor: string | null
+          hospital: string | null
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          doctor?: string | null
+          hospital?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          doctor?: string | null
+          hospital?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

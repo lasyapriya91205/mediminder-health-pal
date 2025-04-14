@@ -5,20 +5,31 @@ import { Bell } from 'lucide-react';
 
 interface MedicineReminderProps {
   medicines: any[];
+  onMedicineTaken?: (medicine: any) => void;
 }
 
-const MedicineReminder: React.FC<MedicineReminderProps> = ({ medicines }) => {
-  const [activeMedicine, setActiveMedicine] = useState<string | null>(null);
+const MedicineReminder: React.FC<MedicineReminderProps> = ({ 
+  medicines,
+  onMedicineTaken
+}) => {
+  const [checkedMedicines, setCheckedMedicines] = useState<Set<string>>(new Set());
   
   useEffect(() => {
     // Check every minute for medicines that need to be taken
     const interval = setInterval(() => {
+      if (!medicines || medicines.length === 0) return;
+      
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
       medicines.forEach(medicine => {
+        // Skip if already checked
+        if (checkedMedicines.has(medicine.id)) return;
+        
         if (medicine.time === currentTime) {
-          setActiveMedicine(medicine.id);
+          // Add to checked medicines
+          setCheckedMedicines(prev => new Set(prev).add(medicine.id));
+          
           // Show a toast notification
           toast(
             <div className="flex items-center gap-3">
@@ -33,8 +44,9 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({ medicines }) => {
               action: {
                 label: "Take Now",
                 onClick: () => {
-                  // Logic to mark as taken could be added here
-                  console.log("Taking medicine:", medicine.name);
+                  if (onMedicineTaken) {
+                    onMedicineTaken(medicine);
+                  }
                 },
               },
             }
@@ -45,7 +57,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({ medicines }) => {
     
     // Cleanup on unmount
     return () => clearInterval(interval);
-  }, [medicines]);
+  }, [medicines, checkedMedicines, onMedicineTaken]);
   
   return null; // This is a background component with no UI
 };
