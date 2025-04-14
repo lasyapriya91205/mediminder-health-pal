@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, ArrowRight, FileText, Check, AlertCircle, CalendarPlus, Pill, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -38,7 +37,11 @@ const Index = () => {
             .eq('id', user.id)
             .single();
           
-          if (error) throw error;
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            return;
+          }
+          
           if (data && data.first_name) {
             setFirstName(data.first_name);
           }

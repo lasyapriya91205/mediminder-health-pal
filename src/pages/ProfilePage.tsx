@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -40,7 +39,15 @@ const ProfilePage = () => {
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching profile:', error);
+          toast({
+            title: "Error loading profile",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
 
         if (data) {
           setProfileData({
