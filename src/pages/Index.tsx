@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
+import MedicineReminder from '@/components/MedicineReminder';
 
 // Get greeting based on time of day
 const getGreeting = () => {
@@ -24,14 +25,12 @@ const Index = () => {
   const [nextMedicine, setNextMedicine] = useState<any>(null);
   const [recentUpdates, setRecentUpdates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // If user is not logged in, redirect to auth page
-  if (!user) {
-    return <Navigate to="/auth" />;
-  }
+  const [medicines, setMedicines] = useState<any[]>([]);
   
   useEffect(() => {
     const fetchUserData = async () => {
+      if (!user) return; // Skip fetching if no user
+      
       setIsLoading(true);
       try {
         // Fetch user profile
@@ -63,6 +62,7 @@ const Index = () => {
           // Find the next medication to take based on time
           const next = medicationsData.find(med => med.time >= currentTime) || medicationsData[0];
           setNextMedicine(next);
+          setMedicines(medicationsData);
         }
         
         // Fetch recent medical records
@@ -91,10 +91,13 @@ const Index = () => {
       }
     };
     
-    if (user) {
-      fetchUserData();
-    }
+    fetchUserData();
   }, [user, toast]);
+
+  // If user is not logged in, redirect to auth page
+  if (!user) {
+    return <Navigate to="/auth" />;
+  }
 
   // Format the recent updates for display
   const formatRecentUpdates = () => {
@@ -160,6 +163,52 @@ const Index = () => {
       case "health": return "bg-peach-50";
       case "appointment": return "bg-teal-50";
       default: return "bg-slate-50";
+    }
+  };
+
+  const handleMedicineTaken = async (medicine: any) => {
+    try {
+      // Add a medical record for the taken medicine
+      const { error } = await supabase
+        .from('medical_records')
+        .insert([
+          {
+            user_id: user.id,
+            record_type: 'medication_taken',
+            details: {
+              medication_id: medicine.id,
+              medication_name: medicine.name,
+              dosage: medicine.dosage,
+              taken_at: new Date().toISOString()
+            }
+          }
+        ]);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Medicine taken",
+        description: `${medicine.name} has been marked as taken.`,
+      });
+      
+      // Refresh the recent updates
+      const { data: recordsData } = await supabase
+        .from('medical_records')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+        
+      if (recordsData) {
+        setRecentUpdates(recordsData);
+      }
+    } catch (error: any) {
+      console.error('Error recording medication taken:', error);
+      toast({
+        title: "Error updating records",
+        description: error.message || "Could not update your records. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -286,6 +335,9 @@ const Index = () => {
           )}
         </div>
       </main>
+      
+      {/* Background component for reminders */}
+      <MedicineReminder medicines={medicines} onMedicineTaken={handleMedicineTaken} />
     </div>
   );
 };
