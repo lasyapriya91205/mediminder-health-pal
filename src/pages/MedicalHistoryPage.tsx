@@ -130,23 +130,18 @@ const MedicalHistoryPage = () => {
         }
       });
       
-      const uploadPromise = new Promise<void>((resolve, reject) => {
-        xhr.addEventListener('load', () => resolve());
-        xhr.addEventListener('error', () => reject(new Error('Upload failed')));
-        xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
-      });
+      const fileBuffer = await selectedFile.arrayBuffer();
       
       const { data, error } = await supabase.storage
         .from('medical_documents')
         .upload(filePath, selectedFile, {
           cacheControl: '3600',
-          upsert: true,
-          xhr
+          upsert: true
         });
       
       if (error) throw error;
       
-      await uploadPromise;
+      setUploadProgress(100);
       
       const { data: documentsData, error: documentsError } = await supabase
         .storage

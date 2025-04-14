@@ -11,21 +11,29 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 // Create the storage bucket for medical documents if it doesn't exist
 const createBucketIfNotExists = async () => {
-  const { data, error } = await createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
-    .storage
-    .getBucket('medical_documents');
-    
-  if (error && error.message.includes('not found')) {
-    const { error: createError } = await createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  
+  try {
+    const { data, error } = await supabaseAdmin
       .storage
-      .createBucket('medical_documents', {
-        public: false,
-        fileSizeLimit: 10485760, // 10MB limit
-      });
+      .getBucket('medical_documents');
       
-    if (createError) {
-      console.error('Error creating medical documents bucket:', createError);
+    if (error && error.message.includes('not found')) {
+      const { error: createError } = await supabaseAdmin
+        .storage
+        .createBucket('medical_documents', {
+          public: false,
+          fileSizeLimit: 10485760, // 10MB limit
+        });
+        
+      if (createError) {
+        console.error('Error creating medical documents bucket:', createError);
+      } else {
+        console.log('Medical documents bucket created successfully');
+      }
     }
+  } catch (error) {
+    console.error('Error checking for medical documents bucket:', error);
   }
 };
 
