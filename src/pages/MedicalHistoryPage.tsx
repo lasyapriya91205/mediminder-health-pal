@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import { FileText, Upload, Plus, Check, X, FileUp, Trash, Download, Building } from 'lucide-react';
+import { FileText, Upload, Plus, Check, X, FileUp, Trash, Download, Building, CheckCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ConditionForm from '../components/ConditionForm';
 import AllergyForm from '../components/AllergyForm';
 import SurgeryForm from '../components/SurgeryForm';
+import { Progress } from "@/components/ui/progress";
 
 const MedicalHistoryPage = () => {
   const { user } = useAuth();
@@ -21,10 +22,14 @@ const MedicalHistoryPage = () => {
   const [conditions, setConditions] = useState<any[]>([]);
   const [allergies, setAllergies] = useState<any[]>([]);
   const [surgeries, setSurgeries] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formType, setFormType] = useState<'condition' | 'allergy' | 'surgery' | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // If user is not logged in, redirect to auth page
   if (!user) {
@@ -65,6 +70,18 @@ const MedicalHistoryPage = () => {
         if (surgeriesError) throw surgeriesError;
         setSurgeries(surgeriesData || []);
         
+        // Fetch documents from storage
+        const { data: documentsData, error: documentsError } = await supabase
+          .storage
+          .from('medical_documents')
+          .list(`${user.id}`);
+          
+        if (documentsError && documentsError.message !== 'The resource was not found') {
+          throw documentsError;
+        }
+        
+        setDocuments(documentsData || []);
+        
       } catch (error: any) {
         console.error('Error fetching medical data:', error);
         toast({
@@ -98,6 +115,132 @@ const MedicalHistoryPage = () => {
     setIsFormOpen(false);
     setFormType(null);
     setEditingItem(null);
+  };
+  
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files && e.target.files[0];
+    if (!selectedFile || !user) return;
+    
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      // Create the storage path for the user if it doesn't exist
+      const filePath = `${user.id}/${selectedFile.name}`;
+      
+      // Upload the file
+      const { data, error } = await supabase.storage
+        .from('medical_documents')
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const percentage = (progress.loaded / progress.total) * 100;
+            setUploadProgress(Math.round(percentage));
+          }
+        });
+      
+      if (error) throw error;
+      
+      // Refresh the documents list
+      const { data: documentsData, error: documentsError } = await supabase
+        .storage
+        .from('medical_documents')
+        .list(`${user.id}`);
+        
+      if (documentsError) throw documentsError;
+      
+      setDocuments(documentsData || []);
+      
+      toast({
+        title: "File uploaded successfully",
+        description: `${selectedFile.name} has been uploaded to your medical records.`
+      });
+      
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Error uploading file",
+        description: error.message || "Could not upload your file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+  
+  const handleDownloadFile = async (fileName: string) => {
+    try {
+      if (!user) return;
+      
+      const filePath = `${user.id}/${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('medical_documents')
+        .download(filePath);
+        
+      if (error) throw error;
+      
+      // Create a download link for the file
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error: any) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Error downloading file",
+        description: error.message || "Could not download your file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleDeleteFile = async (fileName: string) => {
+    try {
+      if (!user) return;
+      
+      const filePath = `${user.id}/${fileName}`;
+      
+      const { error } = await supabase.storage
+        .from('medical_documents')
+        .remove([filePath]);
+        
+      if (error) throw error;
+      
+      // Update the documents list
+      setDocuments(docs => docs.filter(doc => doc.name !== fileName));
+      
+      toast({
+        title: "File deleted",
+        description: `${fileName} has been removed from your medical records.`
+      });
+      
+    } catch (error: any) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Error deleting file",
+        description: error.message || "Could not delete your file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleClickUpload = () => {
+    // Trigger the hidden file input click
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
   
   const handleSaveCondition = async (conditionData: any) => {
@@ -649,60 +792,92 @@ const MedicalHistoryPage = () => {
                   <CardTitle className="text-xl text-slate-800">Medical Documents</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 mb-4 text-center">
+                  {/* Hidden file input for uploads */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    className="hidden"
+                  />
+                  
+                  <div 
+                    className="border-2 border-dashed border-slate-200 rounded-lg p-8 mb-4 text-center hover:bg-slate-50 transition-colors cursor-pointer"
+                    onClick={handleClickUpload}
+                  >
                     <div className="mx-auto flex flex-col items-center">
                       <FileUp className="h-10 w-10 text-slate-400 mb-2" />
                       <h3 className="font-medium text-slate-800 mb-1">Upload Medical Documents</h3>
                       <p className="text-sm text-slate-500 mb-4">Drag and drop files or click to browse</p>
-                      <Button variant="outline">Browse Files</Button>
+                      <Button variant="outline" onClick={(e) => {
+                        e.stopPropagation();
+                        handleClickUpload();
+                      }}>
+                        Browse Files
+                      </Button>
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="bg-lavender-50 p-2 rounded mr-3">
-                          <FileText className="h-5 w-5 text-lavender-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-sm text-slate-800">Blood Test Results.pdf</h4>
-                          <p className="text-xs text-slate-500">Uploaded: April 10, 2023</p>
-                        </div>
+                  {isUploading && (
+                    <div className="my-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium">Uploading...</p>
+                        <p className="text-sm text-slate-500">{uploadProgress}%</p>
                       </div>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Download</span>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500">
-                          <span className="sr-only">Delete</span>
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
                     </div>
-                    
-                    <div className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="bg-teal-50 p-2 rounded mr-3">
-                          <FileText className="h-5 w-5 text-teal-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-sm text-slate-800">EKG Report.pdf</h4>
-                          <p className="text-xs text-slate-500">Uploaded: January 15, 2023</p>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Download</span>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500">
-                          <span className="sr-only">Delete</span>
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  )}
+                  
+                  {isLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-500"></div>
                     </div>
-                  </div>
+                  ) : documents.length > 0 ? (
+                    <div className="space-y-3">
+                      {documents.map((document, index) => (
+                        <div key={index} className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="bg-lavender-50 p-2 rounded mr-3">
+                              <FileText className="h-5 w-5 text-lavender-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm text-slate-800">{document.name}</h4>
+                              <p className="text-xs text-slate-500">
+                                {new Date(document.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleDownloadFile(document.name)}
+                            >
+                              <span className="sr-only">Download</span>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 text-red-500"
+                              onClick={() => handleDeleteFile(document.name)}
+                            >
+                              <span className="sr-only">Delete</span>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-slate-600">You have no documents uploaded.</p>
+                      <p className="text-sm text-slate-500 mt-1">
+                        Click the upload area to add medical documents.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
