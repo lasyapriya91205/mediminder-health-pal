@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -31,7 +30,6 @@ const MedicalHistoryPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // If user is not logged in, redirect to auth page
   if (!user) {
     return <Navigate to="/auth" />;
   }
@@ -40,7 +38,6 @@ const MedicalHistoryPage = () => {
     const fetchMedicalData = async () => {
       setIsLoading(true);
       try {
-        // Fetch medical conditions
         const { data: conditionsData, error: conditionsError } = await supabase
           .from('medical_conditions')
           .select('*')
@@ -50,7 +47,6 @@ const MedicalHistoryPage = () => {
         if (conditionsError) throw conditionsError;
         setConditions(conditionsData || []);
         
-        // Fetch allergies
         const { data: allergiesData, error: allergiesError } = await supabase
           .from('allergies')
           .select('*')
@@ -60,7 +56,6 @@ const MedicalHistoryPage = () => {
         if (allergiesError) throw allergiesError;
         setAllergies(allergiesData || []);
         
-        // Fetch surgeries
         const { data: surgeriesData, error: surgeriesError } = await supabase
           .from('surgeries')
           .select('*')
@@ -70,7 +65,6 @@ const MedicalHistoryPage = () => {
         if (surgeriesError) throw surgeriesError;
         setSurgeries(surgeriesData || []);
         
-        // Fetch documents from storage
         const { data: documentsData, error: documentsError } = await supabase
           .storage
           .from('medical_documents')
@@ -125,24 +119,35 @@ const MedicalHistoryPage = () => {
       setIsUploading(true);
       setUploadProgress(0);
       
-      // Create the storage path for the user if it doesn't exist
       const filePath = `${user.id}/${selectedFile.name}`;
       
-      // Upload the file
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentage = (event.loaded / event.total) * 100;
+          setUploadProgress(Math.round(percentage));
+        }
+      });
+      
+      const uploadPromise = new Promise<void>((resolve, reject) => {
+        xhr.addEventListener('load', () => resolve());
+        xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+        xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+      });
+      
       const { data, error } = await supabase.storage
         .from('medical_documents')
         .upload(filePath, selectedFile, {
           cacheControl: '3600',
           upsert: true,
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100;
-            setUploadProgress(Math.round(percentage));
-          }
+          xhr
         });
       
       if (error) throw error;
       
-      // Refresh the documents list
+      await uploadPromise;
+      
       const { data: documentsData, error: documentsError } = await supabase
         .storage
         .from('medical_documents')
@@ -167,7 +172,6 @@ const MedicalHistoryPage = () => {
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
-      // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -186,7 +190,6 @@ const MedicalHistoryPage = () => {
         
       if (error) throw error;
       
-      // Create a download link for the file
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -218,7 +221,6 @@ const MedicalHistoryPage = () => {
         
       if (error) throw error;
       
-      // Update the documents list
       setDocuments(docs => docs.filter(doc => doc.name !== fileName));
       
       toast({
@@ -237,7 +239,6 @@ const MedicalHistoryPage = () => {
   };
   
   const handleClickUpload = () => {
-    // Trigger the hidden file input click
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -246,7 +247,6 @@ const MedicalHistoryPage = () => {
   const handleSaveCondition = async (conditionData: any) => {
     try {
       if (editingItem) {
-        // Update existing condition
         const { error } = await supabase
           .from('medical_conditions')
           .update({
@@ -276,7 +276,6 @@ const MedicalHistoryPage = () => {
           description: `${conditionData.name} has been updated successfully.`,
         });
       } else {
-        // Create new condition
         const { data, error } = await supabase
           .from('medical_conditions')
           .insert([
@@ -340,7 +339,6 @@ const MedicalHistoryPage = () => {
   const handleSaveAllergy = async (allergyData: any) => {
     try {
       if (editingItem) {
-        // Update existing allergy
         const { error } = await supabase
           .from('allergies')
           .update({
@@ -370,7 +368,6 @@ const MedicalHistoryPage = () => {
           description: `${allergyData.name} has been updated successfully.`,
         });
       } else {
-        // Create new allergy
         const { data, error } = await supabase
           .from('allergies')
           .insert([
@@ -434,7 +431,6 @@ const MedicalHistoryPage = () => {
   const handleSaveSurgery = async (surgeryData: any) => {
     try {
       if (editingItem) {
-        // Update existing surgery
         const { error } = await supabase
           .from('surgeries')
           .update({
@@ -466,7 +462,6 @@ const MedicalHistoryPage = () => {
           description: `${surgeryData.name} has been updated successfully.`,
         });
       } else {
-        // Create new surgery
         const { data, error } = await supabase
           .from('surgeries')
           .insert([
@@ -792,7 +787,6 @@ const MedicalHistoryPage = () => {
                   <CardTitle className="text-xl text-slate-800">Medical Documents</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Hidden file input for uploads */}
                   <input
                     type="file"
                     ref={fileInputRef}
