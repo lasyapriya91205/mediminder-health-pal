@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -11,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface MedicationRecordDetails {
   medication_id: string;
@@ -76,7 +78,8 @@ const MedicinesPage = () => {
                 return recordDate === todayStr;
               })
               .map(record => {
-                const details = record.details as MedicationRecordDetails;
+                // Safely cast the details to MedicationRecordDetails
+                const details = record.details as unknown as MedicationRecordDetails;
                 return details.medication_id;
               })
           );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Clock, AlertCircle, MoreVertical, Edit, Trash } from 'lucide-react';
 import { 
@@ -36,7 +37,6 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
     const fetchMedicineImage = async () => {
       try {
         // Use Unsplash to get medicine images based on medicine name
-        // This is more reliable than trying to fetch from DuckDuckGo which doesn't have a public API
         setMedicineImage(`https://source.unsplash.com/featured/?pill,medicine,${encodeURIComponent(medicine.name)}`);
       } catch (error) {
         console.error("Error fetching medicine image:", error);
