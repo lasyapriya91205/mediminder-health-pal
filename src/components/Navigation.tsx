@@ -26,7 +26,7 @@ const Navigation = () => {
               <div className="bg-teal-400 text-white p-1 rounded">
                 <Calendar size={18} />
               </div>
-              <span className="font-semibold text-slate-700 text-lg">MyMeds Companion</span>
+              <span className="font-semibold text-slate-700 text-lg">Mediminder</span>
             </NavLink>
           </div>
           
