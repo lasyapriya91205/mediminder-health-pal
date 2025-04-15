@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
@@ -72,7 +71,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
                 </div>
               </div>,
               {
-                duration: 10000,
+                duration: 3000, // Notification slides away after 3 seconds
                 action: {
                   label: "Take Now",
                   onClick: () => {
@@ -186,4 +185,3 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
 };
 
 export default MedicineReminder;
-
