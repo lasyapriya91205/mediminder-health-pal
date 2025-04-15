@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
@@ -13,6 +12,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
+interface MedicationRecordDetails {
+  medication_id: string;
+  medication_name: string;
+  dosage: string;
+  taken_at: string;
+}
+
 const MedicinesPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -25,7 +31,6 @@ const MedicinesPage = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<any>(null);
   
-  // If user is not logged in, redirect to auth page
   if (!user) {
     return <Navigate to="/auth" />;
   }
@@ -44,7 +49,6 @@ const MedicinesPage = () => {
           throw error;
         }
         
-        // Add imageUrl field for compatibility with MedicineCard
         const medicationsWithImages = data.map(med => ({
           ...med,
           imageUrl: "/placeholder.svg"
@@ -52,7 +56,6 @@ const MedicinesPage = () => {
         
         setMedicines(medicationsWithImages);
         
-        // Fetch taken medications for today from medical_records
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
         
@@ -66,14 +69,16 @@ const MedicinesPage = () => {
         if (recordsError) {
           console.error('Error fetching medication records:', recordsError);
         } else if (recordsData) {
-          // Extract medication IDs from records taken today
           const takenMeds = new Set(
             recordsData
               .filter(record => {
                 const recordDate = new Date(record.created_at).toISOString().split('T')[0];
                 return recordDate === todayStr;
               })
-              .map(record => record.details.medication_id)
+              .map(record => {
+                const details = record.details as MedicationRecordDetails;
+                return details.medication_id;
+              })
           );
           
           setTakenMedicines(takenMeds);
@@ -94,7 +99,6 @@ const MedicinesPage = () => {
       fetchMedications();
     }
     
-    // Set up interval to update current time
     const interval = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
@@ -102,13 +106,11 @@ const MedicinesPage = () => {
     return () => clearInterval(interval);
   }, [user, toast]);
   
-  // Filter medicines to show only those not taken today
   useEffect(() => {
     const filteredMedicines = medicines.filter(med => !takenMedicines.has(med.id));
     setVisibleMedicines(filteredMedicines);
   }, [medicines, takenMedicines]);
   
-  // Check which medicine is active based on time
   useEffect(() => {
     const now = currentTime;
     const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -118,7 +120,6 @@ const MedicinesPage = () => {
       const medTime = new Date(now);
       medTime.setHours(hours, minutes, 0);
       
-      // Consider a medicine active if it's within 15 minutes of its scheduled time
       const diffMs = Math.abs(now.getTime() - medTime.getTime());
       const diffMinutes = Math.floor(diffMs / 60000);
       
@@ -153,7 +154,6 @@ const MedicinesPage = () => {
   const handleSaveMedicine = async (medicineData: any) => {
     try {
       if (editingMedicine) {
-        // Update existing medicine
         const { error } = await supabase
           .from('medications')
           .update({
@@ -184,7 +184,6 @@ const MedicinesPage = () => {
           description: `${medicineData.name} has been updated successfully.`,
         });
       } else {
-        // Create new medicine
         const { data, error } = await supabase
           .from('medications')
           .insert([
@@ -253,7 +252,6 @@ const MedicinesPage = () => {
   
   const handleMedicineTaken = async (medicine: any) => {
     try {
-      // Add a medical record for the taken medicine
       const { error } = await supabase
         .from('medical_records')
         .insert([
@@ -271,7 +269,6 @@ const MedicinesPage = () => {
         
       if (error) throw error;
       
-      // Update the local state to hide this medicine
       setTakenMedicines(prev => {
         const updated = new Set(prev);
         updated.add(medicine.id);
@@ -364,7 +361,6 @@ const MedicinesPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Background component for reminders */}
       <MedicineReminder medicines={visibleMedicines} onMedicineTaken={handleMedicineTaken} />
     </div>
   );

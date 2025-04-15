@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Clock, AlertCircle, MoreVertical, Edit, Trash } from 'lucide-react';
 import { 
@@ -36,21 +35,12 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
   useEffect(() => {
     const fetchMedicineImage = async () => {
       try {
-        // Fetch image from DuckDuckGo using the medicine name
-        const response = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(medicine.name)}+pill+medicine&iax=images&ia=images`);
-        
-        // This is just a fallback since we can't directly extract images from the search results
-        // In a real app, you would use a proper API with an API key
-        if (!response.ok) {
-          console.log("Couldn't fetch medicine image");
-          return;
-        }
-        
-        // Since we can't use an external API without proper keys, we'll use a general medicine image API
-        // This is a placeholder for demonstration
-        setMedicineImage(`https://source.unsplash.com/featured/?medicine,${encodeURIComponent(medicine.name)}`);
+        // Use Unsplash to get medicine images based on medicine name
+        // This is more reliable than trying to fetch from DuckDuckGo which doesn't have a public API
+        setMedicineImage(`https://source.unsplash.com/featured/?pill,medicine,${encodeURIComponent(medicine.name)}`);
       } catch (error) {
         console.error("Error fetching medicine image:", error);
+        setMedicineImage("/placeholder.svg");
       }
     };
     
