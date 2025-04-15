@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Clock, AlertCircle, MoreVertical, Edit, Trash } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, MoreVertical, Edit, Trash, PillBottle } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -31,23 +30,32 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
   onTakeMedicine 
 }) => {
   const [taken, setTaken] = useState(false);
-  const [medicineImage, setMedicineImage] = useState<string>(medicine.imageUrl || "/placeholder.svg");
+  const [imageError, setImageError] = useState(false);
+  const [medicineImage, setMedicineImage] = useState<string>("/placeholder.svg");
   
   useEffect(() => {
     const fetchMedicineImage = async () => {
+      if (!medicine.name || imageError) return;
+      
       try {
-        // Use Unsplash to get medicine images based on medicine name
-        setMedicineImage(`https://source.unsplash.com/featured/?pill,medicine,${encodeURIComponent(medicine.name)}`);
+        const searchTerms = [
+          medicine.name.toLowerCase(),
+          'medicine',
+          'pill',
+          'pharmaceutical'
+        ].join(',');
+        
+        const imageUrl = `https://source.unsplash.com/featured/?${encodeURIComponent(searchTerms)}`;
+        setMedicineImage(imageUrl);
       } catch (error) {
         console.error("Error fetching medicine image:", error);
+        setImageError(true);
         setMedicineImage("/placeholder.svg");
       }
     };
     
-    if (medicine.name) {
-      fetchMedicineImage();
-    }
-  }, [medicine.name]);
+    fetchMedicineImage();
+  }, [medicine.name, imageError]);
   
   const handleTakeMedicine = () => {
     setTaken(true);
@@ -76,13 +84,21 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
 
   return (
     <div className={`flex flex-col md:flex-row gap-4 p-4 rounded-lg border ${taken ? 'border-green-100 bg-green-50/30' : isActive ? 'border-teal-100 bg-teal-50' : 'border-slate-100'} ${taken ? 'opacity-70' : ''}`}>
-      <div className="md:w-1/4 flex-shrink-0">
+      <div className="md:w-1/4 flex-shrink-0 relative">
         <img
           src={medicineImage}
           alt={medicine.name}
           className="w-full h-24 object-cover rounded-lg bg-slate-100"
-          onError={() => setMedicineImage("/placeholder.svg")}
+          onError={() => {
+            setImageError(true);
+            setMedicineImage("/placeholder.svg");
+          }}
         />
+        {imageError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+            <PillBottle className="h-8 w-8 text-slate-400" />
+          </div>
+        )}
       </div>
       
       <div className="flex-grow">
