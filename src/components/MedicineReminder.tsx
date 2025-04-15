@@ -14,11 +14,13 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
 }) => {
   const [checkedMedicines, setCheckedMedicines] = useState<Set<string>>(new Set());
   const [missedMedicines, setMissedMedicines] = useState<Set<string>>(new Set());
+  const [missedMedicineNotificationTimes, setMissedMedicineNotificationTimes] = useState<Map<string, number>>(new Map());
   
   useEffect(() => {
     // Reset checked medicines when the medicines prop changes
     setCheckedMedicines(new Set());
     setMissedMedicines(new Set());
+    setMissedMedicineNotificationTimes(new Map());
   }, [medicines]);
   
   useEffect(() => {
@@ -46,6 +48,19 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
               updated.add(medicine.id);
               return updated;
             });
+          }
+          
+          // Check if it's time to show another notification (every 10 minutes)
+          const lastNotificationTime = missedMedicineNotificationTimes.get(medicine.id) || 0;
+          const timeSinceLastNotification = now.getTime() - lastNotificationTime;
+          
+          if (timeSinceLastNotification >= 600000) { // 10 minutes in milliseconds
+            // Update last notification time
+            setMissedMedicineNotificationTimes(prev => {
+              const updated = new Map(prev);
+              updated.set(medicine.id, now.getTime());
+              return updated;
+            });
             
             // Show a toast notification
             toast(
@@ -66,6 +81,12 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
                       // Remove from missed medicines when taken
                       setMissedMedicines(prev => {
                         const updated = new Set(prev);
+                        updated.delete(medicine.id);
+                        return updated;
+                      });
+                      // Clear the notification time
+                      setMissedMedicineNotificationTimes(prev => {
+                        const updated = new Map(prev);
                         updated.delete(medicine.id);
                         return updated;
                       });
