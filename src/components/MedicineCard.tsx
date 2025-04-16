@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Clock, AlertCircle, MoreVertical, Edit, Trash, PillBottle } from 'lucide-react';
 import { 
@@ -38,11 +39,48 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
       if (!medicine.name || imageError) return;
       
       try {
+        // Normalize medicine name to lowercase for comparisons
+        const medicineName = medicine.name.toLowerCase().trim();
+        
+        // Common medicine specific images
+        const commonMedicines: Record<string, string> = {
+          'aspirin': 'https://source.unsplash.com/featured/?aspirin,pill',
+          'tylenol': 'https://source.unsplash.com/featured/?tylenol,acetaminophen',
+          'advil': 'https://source.unsplash.com/featured/?advil,ibuprofen',
+          'ibuprofen': 'https://source.unsplash.com/featured/?ibuprofen',
+          'acetaminophen': 'https://source.unsplash.com/featured/?acetaminophen',
+          'paracetamol': 'https://source.unsplash.com/featured/?paracetamol',
+          'lisinopril': 'https://source.unsplash.com/featured/?blood,pressure,medication',
+          'metformin': 'https://source.unsplash.com/featured/?diabetes,medication',
+          'atorvastatin': 'https://source.unsplash.com/featured/?cholesterol,medication',
+          'levothyroxine': 'https://source.unsplash.com/featured/?thyroid,medication',
+          'albuterol': 'https://source.unsplash.com/featured/?inhaler,asthma',
+          'omeprazole': 'https://source.unsplash.com/featured/?stomach,acid,medication',
+          'amlodipine': 'https://source.unsplash.com/featured/?blood,pressure,medication',
+          'metoprolol': 'https://source.unsplash.com/featured/?heart,medication',
+          'simvastatin': 'https://source.unsplash.com/featured/?cholesterol,statin',
+          'losartan': 'https://source.unsplash.com/featured/?blood,pressure,pill',
+          'gabapentin': 'https://source.unsplash.com/featured/?pain,medication',
+          'hydrochlorothiazide': 'https://source.unsplash.com/featured/?diuretic,medication',
+          'sertraline': 'https://source.unsplash.com/featured/?antidepressant,pill',
+          'montelukast': 'https://source.unsplash.com/featured/?allergy,medication'
+        };
+        
+        // Check if this is a common medicine we know about
+        for (const [key, imageUrl] of Object.entries(commonMedicines)) {
+          if (medicineName.includes(key)) {
+            setMedicineImage(imageUrl);
+            return;
+          }
+        }
+        
+        // If no match in our common medicines, use a more targeted search
         const searchTerms = [
           medicine.name.toLowerCase(),
           'medicine',
           'pill',
-          'pharmaceutical'
+          'pharmaceutical',
+          'medication'
         ].join(',');
         
         const imageUrl = `https://source.unsplash.com/featured/?${encodeURIComponent(searchTerms)}`;
