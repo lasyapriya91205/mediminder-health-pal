@@ -175,7 +175,7 @@ const AuthPage = () => {
         <div className="max-w-md mx-auto">
           <Card>
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">MyMeds Companion</CardTitle>
+              <CardTitle className="text-2xl text-center">Mediminder</CardTitle>
               <CardDescription className="text-center">
                 Enter your email to sign in to your account
               </CardDescription>

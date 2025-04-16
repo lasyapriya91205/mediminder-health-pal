@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import EntryPage from "./pages/EntryPage";
 import Index from "./pages/Index";
 import MedicinesPage from "./pages/MedicinesPage";
 import MedicalHistoryPage from "./pages/MedicalHistoryPage";
@@ -24,7 +25,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<EntryPage />} />
+            <Route path="/dashboard" element={<Index />} />
             <Route path="/medicines" element={<MedicinesPage />} />
             <Route path="/history" element={<MedicalHistoryPage />} />
             <Route path="/settings" element={<SettingsPage />} />
