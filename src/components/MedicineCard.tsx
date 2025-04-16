@@ -32,63 +32,67 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
 }) => {
   const [taken, setTaken] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const [medicineImage, setMedicineImage] = useState<string>("/placeholder.svg");
   
   useEffect(() => {
     const fetchMedicineImage = async () => {
       if (!medicine.name || imageError) return;
       
+      setImageLoading(true);
       try {
         // Normalize medicine name to lowercase for comparisons
         const medicineName = medicine.name.toLowerCase().trim();
         
-        // Common medicine specific images
+        // Common medicine specific images - using more direct pill images
         const commonMedicines: Record<string, string> = {
-          'aspirin': 'https://source.unsplash.com/featured/?aspirin,pill',
-          'tylenol': 'https://source.unsplash.com/featured/?tylenol,acetaminophen',
-          'advil': 'https://source.unsplash.com/featured/?advil,ibuprofen',
-          'ibuprofen': 'https://source.unsplash.com/featured/?ibuprofen',
-          'acetaminophen': 'https://source.unsplash.com/featured/?acetaminophen',
-          'paracetamol': 'https://source.unsplash.com/featured/?paracetamol',
-          'lisinopril': 'https://source.unsplash.com/featured/?blood,pressure,medication',
-          'metformin': 'https://source.unsplash.com/featured/?diabetes,medication',
-          'atorvastatin': 'https://source.unsplash.com/featured/?cholesterol,medication',
-          'levothyroxine': 'https://source.unsplash.com/featured/?thyroid,medication',
-          'albuterol': 'https://source.unsplash.com/featured/?inhaler,asthma',
-          'omeprazole': 'https://source.unsplash.com/featured/?stomach,acid,medication',
-          'amlodipine': 'https://source.unsplash.com/featured/?blood,pressure,medication',
-          'metoprolol': 'https://source.unsplash.com/featured/?heart,medication',
-          'simvastatin': 'https://source.unsplash.com/featured/?cholesterol,statin',
-          'losartan': 'https://source.unsplash.com/featured/?blood,pressure,pill',
-          'gabapentin': 'https://source.unsplash.com/featured/?pain,medication',
-          'hydrochlorothiazide': 'https://source.unsplash.com/featured/?diuretic,medication',
-          'sertraline': 'https://source.unsplash.com/featured/?antidepressant,pill',
-          'montelukast': 'https://source.unsplash.com/featured/?allergy,medication'
+          'aspirin': 'https://images.unsplash.com/photo-1626379530580-6a58c5cf1d77?w=600&auto=format&fit=crop',
+          'tylenol': 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=600&auto=format&fit=crop',
+          'advil': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop',
+          'ibuprofen': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop',
+          'acetaminophen': 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=600&auto=format&fit=crop',
+          'paracetamol': 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=600&auto=format&fit=crop',
+          'lisinopril': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop',
+          'metformin': 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&auto=format&fit=crop',
+          'atorvastatin': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop',
+          'levothyroxine': 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=600&auto=format&fit=crop',
+          'albuterol': 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=600&auto=format&fit=crop',
+          'omeprazole': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop',
+          'amlodipine': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop',
+          'metoprolol': 'https://images.unsplash.com/photo-1616261167032-b16d2df8333b?w=600&auto=format&fit=crop',
+          'simvastatin': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop',
+          'losartan': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop',
+          'gabapentin': 'https://images.unsplash.com/photo-1616261167032-b16d2df8333b?w=600&auto=format&fit=crop',
+          'hydrochlorothiazide': 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=600&auto=format&fit=crop',
+          'sertraline': 'https://images.unsplash.com/photo-1616261167032-b16d2df8333b?w=600&auto=format&fit=crop',
+          'montelukast': 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=600&auto=format&fit=crop',
+          'tonic': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600&auto=format&fit=crop',
+          'vitamin': 'https://images.unsplash.com/photo-1577515064471-8670af29b524?w=600&auto=format&fit=crop',
+          'supplement': 'https://images.unsplash.com/photo-1577515064471-8670af29b524?w=600&auto=format&fit=crop',
+          'pill': 'https://images.unsplash.com/photo-1626379530580-6a58c5cf1d77?w=600&auto=format&fit=crop',
+          'capsule': 'https://images.unsplash.com/photo-1577515064471-8670af29b524?w=600&auto=format&fit=crop',
+          'tablet': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop',
+          'syrup': 'https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=600&auto=format&fit=crop',
+          'medicine': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop'
         };
         
-        // Check if this is a common medicine we know about
+        // Check if this is a common medicine we know about - check for partial matches too
         for (const [key, imageUrl] of Object.entries(commonMedicines)) {
           if (medicineName.includes(key)) {
             setMedicineImage(imageUrl);
+            setImageLoading(false);
             return;
           }
         }
         
-        // If no match in our common medicines, use a more targeted search
-        const searchTerms = [
-          medicine.name.toLowerCase(),
-          'medicine',
-          'pill',
-          'pharmaceutical',
-          'medication'
-        ].join(',');
-        
-        const imageUrl = `https://source.unsplash.com/featured/?${encodeURIComponent(searchTerms)}`;
-        setMedicineImage(imageUrl);
+        // Fallback to a general pill image
+        setMedicineImage('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop');
+        setImageLoading(false);
       } catch (error) {
         console.error("Error fetching medicine image:", error);
         setImageError(true);
         setMedicineImage("/placeholder.svg");
+        setImageLoading(false);
       }
     };
     
@@ -123,15 +127,21 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
   return (
     <div className={`flex flex-col md:flex-row gap-4 p-4 rounded-lg border ${taken ? 'border-green-100 bg-green-50/30' : isActive ? 'border-teal-100 bg-teal-50' : 'border-slate-100'} ${taken ? 'opacity-70' : ''}`}>
       <div className="md:w-1/4 flex-shrink-0 relative">
-        <img
-          src={medicineImage}
-          alt={medicine.name}
-          className="w-full h-24 object-cover rounded-lg bg-slate-100"
-          onError={() => {
-            setImageError(true);
-            setMedicineImage("/placeholder.svg");
-          }}
-        />
+        {imageLoading ? (
+          <div className="w-full h-24 flex items-center justify-center bg-slate-100 rounded-lg">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-teal-500"></div>
+          </div>
+        ) : (
+          <img
+            src={medicineImage}
+            alt={medicine.name}
+            className="w-full h-24 object-cover rounded-lg bg-slate-100"
+            onError={() => {
+              setImageError(true);
+              setMedicineImage("/placeholder.svg");
+            }}
+          />
+        )}
         {imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
             <PillBottle className="h-8 w-8 text-slate-400" />
