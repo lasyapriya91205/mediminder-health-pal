@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -33,13 +32,34 @@ const EntryPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-accent/10">
       <div className="container mx-auto px-4 py-8 md:py-16">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
+        {/* Hero Section with animated medical illustration */}
+        <div className="text-center mb-16 relative">
+          <div className="absolute inset-0 flex items-center justify-center -z-10">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.1 }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+              className="w-64 h-64 md:w-96 md:h-96"
+            >
+              <svg
+                viewBox="0 0 200 200"
+                className="w-full h-full text-primary"
+                fill="currentColor"
+              >
+                <path d="M100 0v200M0 100h200M70 30h60v140H70zM30 70h140v60H30z" />
+              </svg>
+            </motion.div>
+          </div>
+          
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-4xl md:text-6xl font-bold text-primary mb-4"
+            className="text-4xl md:text-6xl font-bold text-primary mb-4 relative z-10"
           >
             Welcome to Mediminder
           </motion.h1>
