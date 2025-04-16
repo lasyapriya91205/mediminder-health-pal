@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -26,91 +25,74 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: '#005a8d', // Navy Blue
+					light: '#0073b3',
+					dark: '#003366',
+					foreground: '#ffffff'
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
-				},
-				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
-				},
-				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
+					DEFAULT: '#333333', // Charcoal Gray
+					light: '#4d4d4d',
+					dark: '#1a1a1a',
+					foreground: '#ffffff'
 				},
 				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					DEFAULT: '#87CEFA', // Sky Blue
+					light: '#b3e0ff',
+					dark: '#5D9B9B',
+					foreground: '#333333'
 				},
-				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
+				highlight: {
+					DEFAULT: '#F7F7F7', // Soft White
+					foreground: '#333333'
 				},
-				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
-				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Custom theme colors
 				teal: {
-					50: '#e6f7f6',
-					100: '#ccefe9',
-					200: '#99dfd3',
-					300: '#66cfbe',
-					400: '#4ECDC4', // Primary teal
-					500: '#33bfb4',
-					600: '#269990',
-					700: '#1c736d',
-					800: '#134c49',
-					900: '#092625'
+					50: '#e6f3f7',
+					100: '#cce7ef',
+					200: '#99cfdf',
+					300: '#66b7cf',
+					400: '#005a8d', // Primary navy blue
+					500: '#004d78',
+					600: '#003366', // Darker navy blue
+					700: '#002952',
+					800: '#001f3d',
+					900: '#001229'
 				},
 				lavender: {
-					50: '#f5f3f7',
-					100: '#ebe7ef',
-					200: '#d6cfdf',
-					300: '#c2b7d0',
-					400: '#9E8FB2', // Secondary lavender
-					500: '#8b7ba3',
-					600: '#766690',
-					700: '#5c4e72',
-					800: '#3d344c',
-					900: '#1e1a26'
+					50: '#f2f2f2',
+					100: '#e6e6e6',
+					200: '#cccccc',
+					300: '#b3b3b3',
+					400: '#333333', // Secondary charcoal gray
+					500: '#292929',
+					600: '#1f1f1f',
+					700: '#141414',
+					800: '#0a0a0a',
+					900: '#000000'
 				},
 				peach: {
-					50: '#fff1ef',
-					100: '#ffe4df',
-					200: '#ffc9bf',
-					300: '#ffaea0',
-					400: '#FF9A8B', // Accent peach
-					500: '#ff7d6a',
-					600: '#ff5a42',
-					700: '#ff3719',
-					800: '#e01e00',
-					900: '#b81800'
+					50: '#f0f9ff',
+					100: '#e1f3fe',
+					200: '#b3e0ff',
+					300: '#87CEFA', // Accent sky blue
+					400: '#5D9B9B', // Darker accent
+					500: '#4d8282',
+					600: '#3d6868',
+					700: '#2e4f4f',
+					800: '#1e3535',
+					900: '#0f1a1a'
 				},
 				slate: {
-					50: '#edf0f2',
-					100: '#dbe1e6',
-					200: '#b7c3cd',
-					300: '#93a6b3',
-					400: '#6f889a',
-					500: '#536f85',
-					600: '#405969',
-					700: '#2F4858', // Text slate
-					800: '#1f2f3a',
-					900: '#10171d'
+					50: '#F7F7F7', // Highlight soft white
+					100: '#f0f0f0',
+					200: '#e6e6e6',
+					300: '#d9d9d9',
+					400: '#bfbfbf',
+					500: '#a6a6a6',
+					600: '#8c8c8c',
+					700: '#333333', // Charcoal gray
+					800: '#1a1a1a',
+					900: '#0d0d0d'
 				}
 			},
 			borderRadius: {
