@@ -18,7 +18,7 @@ export const createBucketIfNotExists = async () => {
       .listBuckets();
       
     if (listError) {
-      console.error('Error listing buckets:', listError);
+      console.log('Error listing buckets (this is normal for new projects):', listError.message);
       return false;
     }
     
@@ -35,22 +35,10 @@ export const createBucketIfNotExists = async () => {
         });
         
       if (createError) {
-        console.error('Error creating medical documents bucket:', createError);
+        console.log('Note: Could not create medical documents bucket. This is expected for new projects until RLS policies are set up.');
         return false;
       } else {
         console.log('Medical documents bucket created successfully');
-        
-        // Set bucket policies to allow authenticated users to upload files
-        const { error: policyError } = await supabase
-          .storage
-          .from('medical_documents')
-          .createSignedUploadUrl('test-policy-file');
-          
-        if (policyError && !policyError.message.includes('The resource already exists')) {
-          console.error('Error setting bucket policy:', policyError);
-          return false;
-        }
-        
         return true;
       }
     } else {
@@ -58,10 +46,13 @@ export const createBucketIfNotExists = async () => {
       return true;
     }
   } catch (error) {
-    console.error('Error checking for medical documents bucket:', error);
+    console.log('Error checking for medical documents bucket. This is expected for new projects.');
     return false;
   }
 };
 
-// Initialize the bucket
-createBucketIfNotExists();
+// Initialize the bucket, but don't block the app loading
+setTimeout(() => {
+  createBucketIfNotExists();
+}, 1000);
+

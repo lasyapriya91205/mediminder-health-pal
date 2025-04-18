@@ -23,7 +23,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <NavLink to="/" className="flex items-center gap-2">
-              <div className="bg-teal-400 text-white p-1 rounded">
+              <div className="bg-primary text-white p-1 rounded">
                 <Calendar size={18} />
               </div>
               <span className="font-semibold text-slate-700 text-lg">Mediminder</span>
@@ -31,7 +31,7 @@ const Navigation = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-2">
-            <NavLink to="/" className={({ isActive }) => 
+            <NavLink to="/dashboard" className={({ isActive }) => 
               isActive ? "nav-link-active" : "nav-link"
             }>
               <Home size={18} />
@@ -88,8 +88,8 @@ const Navigation = () => {
           </div>
           
           <div className="md:hidden">
-            {/* Mobile menu button - could be expanded with a proper mobile menu */}
-            <button className="p-2 rounded-md text-slate-600 hover:text-teal-500 hover:bg-teal-50">
+            {/* Mobile menu button */}
+            <button className="p-2 rounded-md text-slate-600 hover:text-primary hover:bg-primary/5">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
