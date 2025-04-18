@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Pill, Shield, User, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import Navigation from '@/components/Navigation';
 
 const EntryPage = () => {
   const features = [
@@ -31,6 +33,7 @@ const EntryPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-accent/10">
+      <Navigation />
       <div className="container mx-auto px-4 py-8 md:py-16">
         {/* Hero Section with animated medical illustration */}
         <div className="text-center mb-16 relative">
@@ -82,7 +85,7 @@ const EntryPage = () => {
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/about">
+            <Link to="/dashboard">
               <Button variant="outline" size="lg">
                 Learn More
               </Button>
