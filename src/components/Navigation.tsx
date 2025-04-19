@@ -1,13 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Calendar, FileText, Settings, User, LogIn, LogOut } from 'lucide-react';
+import { Home, Calendar, FileText, Settings, User, LogIn, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from "@/components/ui/button";
 
 const Navigation = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleAuthClick = () => {
     if (user) {
@@ -15,6 +16,14 @@ const Navigation = () => {
     } else {
       navigate('/auth');
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(prev => !prev);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -88,14 +97,94 @@ const Navigation = () => {
           </div>
           
           <div className="md:hidden">
-            {/* Mobile menu button */}
-            <button className="p-2 rounded-md text-slate-600 hover:text-primary hover:bg-primary/5">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+            <button 
+              className="p-2 rounded-md text-slate-600 hover:text-primary hover:bg-primary/5"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden pt-2 pb-4 border-t border-gray-100">
+            <div className="flex flex-col space-y-1">
+              <NavLink 
+                to="/dashboard" 
+                className={({ isActive }) => isActive ? "nav-link-active" : "nav-link"}
+                onClick={closeMobileMenu}
+              >
+                <Home size={18} />
+                <span>Home</span>
+              </NavLink>
+              
+              <NavLink 
+                to="/medicines" 
+                className={({ isActive }) => isActive ? "nav-link-active" : "nav-link"}
+                onClick={closeMobileMenu}
+              >
+                <Calendar size={18} />
+                <span>Medicines</span>
+              </NavLink>
+              
+              <NavLink 
+                to="/history" 
+                className={({ isActive }) => isActive ? "nav-link-active" : "nav-link"}
+                onClick={closeMobileMenu}
+              >
+                <FileText size={18} />
+                <span>Medical History</span>
+              </NavLink>
+              
+              <NavLink 
+                to="/settings" 
+                className={({ isActive }) => isActive ? "nav-link-active" : "nav-link"}
+                onClick={closeMobileMenu}
+              >
+                <Settings size={18} />
+                <span>Settings</span>
+              </NavLink>
+              
+              {user && (
+                <NavLink 
+                  to="/profile" 
+                  className={({ isActive }) => isActive ? "nav-link-active" : "nav-link"}
+                  onClick={closeMobileMenu}
+                >
+                  <User size={18} />
+                  <span>Profile</span>
+                </NavLink>
+              )}
+              
+              <Button 
+                variant="ghost" 
+                className="nav-link justify-start"
+                onClick={() => {
+                  handleAuthClick();
+                  closeMobileMenu();
+                }}
+              >
+                {user ? (
+                  <>
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn size={18} />
+                    <span>Login</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

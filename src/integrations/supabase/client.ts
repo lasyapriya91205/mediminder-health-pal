@@ -7,7 +7,23 @@ const SUPABASE_URL = "https://jdttdesqckxqcctdjojk.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdHRkZXNxY2t4cWNjdGRqb2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNDg0MTksImV4cCI6MjA1OTkyNDQxOX0.1sLhQg_mq0Y4eH5gyFrYxYv1ODdVTUG4pPS7HCRi3bU";
 
 // Initialize Supabase client
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+  global: {
+    // Add sensible fetch timeout
+    fetch: (url, options) => {
+      const fetchPromise = fetch(url, { ...options, cache: 'no-store' });
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 10000);
+      });
+      return Promise.race([fetchPromise, timeoutPromise]);
+    },
+  },
+});
 
 // Create the storage bucket for medical documents if it doesn't exist
 export const createBucketIfNotExists = async () => {
@@ -53,6 +69,7 @@ export const createBucketIfNotExists = async () => {
 
 // Initialize the bucket, but don't block the app loading
 setTimeout(() => {
-  createBucketIfNotExists();
+  createBucketIfNotExists().catch(error => {
+    console.log('Failed to create bucket, but continuing app execution:', error);
+  });
 }, 1000);
-

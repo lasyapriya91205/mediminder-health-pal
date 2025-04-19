@@ -141,6 +141,83 @@ export type Database = {
         }
         Relationships: []
       }
+      medicines: {
+        Row: {
+          created_at: string | null
+          dosage: string
+          frequency: string
+          id: string
+          image_url: string | null
+          last_taken: string | null
+          name: string
+          taken: boolean | null
+          time_to_take: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dosage: string
+          frequency: string
+          id?: string
+          image_url?: string | null
+          last_taken?: string | null
+          name: string
+          taken?: boolean | null
+          time_to_take: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dosage?: string
+          frequency?: string
+          id?: string
+          image_url?: string | null
+          last_taken?: string | null
+          name?: string
+          taken?: boolean | null
+          time_to_take?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          medicine_id: string
+          message: string
+          read: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          medicine_id: string
+          message: string
+          read?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          medicine_id?: string
+          message?: string
+          read?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
