@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, ArrowRight, FileText, Check, AlertCircle, CalendarPlus, Pill, User } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
@@ -9,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import MedicineReminder from '@/components/MedicineReminder';
+import { Json } from '@/integrations/supabase/types';
 
 // Get greeting based on time of day
 const getGreeting = () => {
@@ -17,6 +17,13 @@ const getGreeting = () => {
   if (hour < 18) return "Good afternoon";
   return "Good evening";
 };
+
+interface MedicationRecordDetails {
+  medication_id: string;
+  medication_name: string;
+  dosage: string;
+  taken_at: string;
+}
 
 const Index = () => {
   const { user } = useAuth();
@@ -37,7 +44,7 @@ const Index = () => {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('first_name')
-          .eq('id', user.id)
+          .eq('id', user.id as string)
           .single();
         
         if (profileError) {
@@ -53,7 +60,7 @@ const Index = () => {
         const { data: medicationsData, error: medicationsError } = await supabase
           .from('medications')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id as string)
           .order('time', { ascending: true });
         
         if (medicationsError) {
@@ -69,7 +76,7 @@ const Index = () => {
         const { data: recordsData, error: recordsError } = await supabase
           .from('medical_records')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id as string)
           .order('created_at', { ascending: false })
           .limit(3);
         
@@ -171,18 +178,16 @@ const Index = () => {
       // Add a medical record for the taken medicine
       const { error } = await supabase
         .from('medical_records')
-        .insert([
-          {
-            user_id: user.id,
-            record_type: 'medication_taken',
-            details: {
-              medication_id: medicine.id,
-              medication_name: medicine.name,
-              dosage: medicine.dosage,
-              taken_at: new Date().toISOString()
-            }
-          }
-        ]);
+        .insert({
+          user_id: user.id as string,
+          record_type: 'medication_taken',
+          details: {
+            medication_id: medicine.id,
+            medication_name: medicine.name,
+            dosage: medicine.dosage,
+            taken_at: new Date().toISOString()
+          } as Json
+        });
         
       if (error) throw error;
       
@@ -195,7 +200,7 @@ const Index = () => {
       const { data: recordsData } = await supabase
         .from('medical_records')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id as string)
         .order('created_at', { ascending: false })
         .limit(3);
         

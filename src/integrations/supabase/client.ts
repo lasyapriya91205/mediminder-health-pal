@@ -15,12 +15,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     // Add sensible fetch timeout
-    fetch: (url, options) => {
+    fetch: (...args) => {
+      const [url, options] = args;
       const fetchPromise = fetch(url, { ...options, cache: 'no-store' });
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Request timeout')), 10000);
       });
-      return Promise.race([fetchPromise, timeoutPromise]);
+      return Promise.race([fetchPromise, timeoutPromise]) as Promise<Response>;
     },
   },
 });

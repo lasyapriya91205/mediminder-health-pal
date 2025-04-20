@@ -44,7 +44,7 @@ const AuthPage = () => {
           const { data, error } = await supabase
             .from('profiles')
             .select('first_name, last_name')
-            .eq('id', user.id)
+            .eq('id', user.id as string)
             .single();
 
           if (error) throw error;
