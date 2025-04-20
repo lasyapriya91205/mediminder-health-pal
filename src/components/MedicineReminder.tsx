@@ -1,10 +1,17 @@
+
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
 
+interface Medicine {
+  id: string;
+  name: string;
+  time: string;
+}
+
 interface MedicineReminderProps {
-  medicines: any[];
-  onMedicineTaken?: (medicine: any) => void;
+  medicines: Medicine[];
+  onMedicineTaken?: (medicine: Medicine) => void;
 }
 
 const MedicineReminder: React.FC<MedicineReminderProps> = ({ 
@@ -16,7 +23,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
   const [missedMedicineNotificationTimes, setMissedMedicineNotificationTimes] = useState<Map<string, number>>(new Map());
   
   useEffect(() => {
-    // Reset checked medicines when the medicines prop changes
+    // Reset states when medicines prop changes
     setCheckedMedicines(new Set());
     setMissedMedicines(new Set());
     setMissedMedicineNotificationTimes(new Map());
@@ -71,7 +78,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
                 </div>
               </div>,
               {
-                duration: 3000, // Notification slides away after 3 seconds
+                duration: 10000,
                 action: {
                   label: "Take Now",
                   onClick: () => {
@@ -133,10 +140,8 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
     // Also check immediately on mount or when medicines change
     if (medicines && medicines.length > 0) {
       const now = new Date();
-      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
       medicines.forEach(medicine => {
-        // Only trigger for medicines due in the last 5 minutes
         const [medHour, medMin] = medicine.time.split(':').map(Number);
         const medTime = new Date();
         medTime.setHours(medHour, medMin, 0);
@@ -144,21 +149,14 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
         const diffMs = now.getTime() - medTime.getTime();
         const diffMinutes = Math.floor(diffMs / 60000);
         
-        if (diffMinutes >= 0 && diffMinutes <= 5 && !checkedMedicines.has(medicine.id)) {
-          // Add to checked medicines
-          setCheckedMedicines(prev => {
-            const updated = new Set(prev);
-            updated.add(medicine.id);
-            return updated;
-          });
-          
-          // Show a toast notification
+        // Show notification for medicines that should have been taken in the last 10 minutes
+        if (diffMinutes >= 0 && diffMinutes <= 10 && !checkedMedicines.has(medicine.id)) {
           toast(
             <div className="flex items-center gap-3">
-              <Bell className="text-teal-500" />
+              <Bell className="text-amber-500" />
               <div>
-                <p className="font-medium">Medicine Reminder</p>
-                <p className="text-sm text-muted-foreground">Time to take {medicine.name}</p>
+                <p className="font-medium">Medicine Due</p>
+                <p className="text-sm text-muted-foreground">Please take {medicine.name} now</p>
               </div>
             </div>,
             {
@@ -177,7 +175,6 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
       });
     }
     
-    // Cleanup on unmount
     return () => clearInterval(interval);
   }, [medicines, checkedMedicines, missedMedicines, onMedicineTaken]);
   
