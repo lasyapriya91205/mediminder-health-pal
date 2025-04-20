@@ -20,13 +20,13 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
 }) => {
   const [checkedMedicines, setCheckedMedicines] = useState<Set<string>>(new Set());
   const [missedMedicines, setMissedMedicines] = useState<Set<string>>(new Set());
-  const [missedMedicineNotificationTimes, setMissedMedicineNotificationTimes] = useState<Map<string, number>>(new Map());
+  const [takenMedicines, setTakenMedicines] = useState<Set<string>>(new Set());
   
   useEffect(() => {
     // Reset states when medicines prop changes
     setCheckedMedicines(new Set());
     setMissedMedicines(new Set());
-    setMissedMedicineNotificationTimes(new Map());
+    setTakenMedicines(new Set());
   }, [medicines]);
   
   useEffect(() => {
@@ -38,15 +38,15 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
       medicines.forEach(medicine => {
-        // Skip if already checked
-        if (checkedMedicines.has(medicine.id)) return;
+        // Skip if already taken
+        if (takenMedicines.has(medicine.id)) return;
         
         const [medHour, medMin] = medicine.time.split(':').map(Number);
         const medTime = new Date();
         medTime.setHours(medHour, medMin, 0);
         
         // If medicine time has passed and hasn't been taken
-        if (medTime < now && !checkedMedicines.has(medicine.id)) {
+        if (medTime < now && !checkedMedicines.has(medicine.id) && !takenMedicines.has(medicine.id)) {
           // Add to missed medicines if not already there
           if (!missedMedicines.has(medicine.id)) {
             setMissedMedicines(prev => {
@@ -54,21 +54,8 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
               updated.add(medicine.id);
               return updated;
             });
-          }
-          
-          // Check if it's time to show another notification (every 10 minutes)
-          const lastNotificationTime = missedMedicineNotificationTimes.get(medicine.id) || 0;
-          const timeSinceLastNotification = now.getTime() - lastNotificationTime;
-          
-          if (timeSinceLastNotification >= 600000) { // 10 minutes in milliseconds
-            // Update last notification time
-            setMissedMedicineNotificationTimes(prev => {
-              const updated = new Map(prev);
-              updated.set(medicine.id, now.getTime());
-              return updated;
-            });
             
-            // Show a toast notification
+            // Show a missed medicine notification
             toast(
               <div className="flex items-center gap-3">
                 <Bell className="text-amber-500" />
@@ -84,18 +71,29 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
                   onClick: () => {
                     if (onMedicineTaken) {
                       onMedicineTaken(medicine);
-                      // Remove from missed medicines when taken
+                      // Mark as taken
+                      setTakenMedicines(prev => {
+                        const updated = new Set(prev);
+                        updated.add(medicine.id);
+                        return updated;
+                      });
+                      // Remove from missed medicines
                       setMissedMedicines(prev => {
                         const updated = new Set(prev);
                         updated.delete(medicine.id);
                         return updated;
                       });
-                      // Clear the notification time
-                      setMissedMedicineNotificationTimes(prev => {
-                        const updated = new Map(prev);
-                        updated.delete(medicine.id);
-                        return updated;
-                      });
+                      // Show confirmation toast
+                      toast(
+                        <div className="flex items-center gap-3">
+                          <Bell className="text-green-500" />
+                          <div>
+                            <p className="font-medium">Medicine Taken</p>
+                            <p className="text-sm text-muted-foreground">You've taken {medicine.name}</p>
+                          </div>
+                        </div>,
+                        { duration: 3000 }
+                      );
                     }
                   },
                 },
@@ -104,7 +102,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
           }
         }
         
-        if (medicine.time === currentTime) {
+        if (medicine.time === currentTime && !takenMedicines.has(medicine.id)) {
           // Add to checked medicines
           setCheckedMedicines(prev => {
             const updated = new Set(prev);
@@ -128,6 +126,23 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
                 onClick: () => {
                   if (onMedicineTaken) {
                     onMedicineTaken(medicine);
+                    // Mark as taken
+                    setTakenMedicines(prev => {
+                      const updated = new Set(prev);
+                      updated.add(medicine.id);
+                      return updated;
+                    });
+                    // Show confirmation toast
+                    toast(
+                      <div className="flex items-center gap-3">
+                        <Bell className="text-green-500" />
+                        <div>
+                          <p className="font-medium">Medicine Taken</p>
+                          <p className="text-sm text-muted-foreground">You've taken {medicine.name}</p>
+                        </div>
+                      </div>,
+                      { duration: 3000 }
+                    );
                   }
                 },
               },
@@ -142,6 +157,8 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
       const now = new Date();
       
       medicines.forEach(medicine => {
+        if (takenMedicines.has(medicine.id)) return; // Skip if already taken
+        
         const [medHour, medMin] = medicine.time.split(':').map(Number);
         const medTime = new Date();
         medTime.setHours(medHour, medMin, 0);
@@ -166,6 +183,23 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
                 onClick: () => {
                   if (onMedicineTaken) {
                     onMedicineTaken(medicine);
+                    // Mark as taken
+                    setTakenMedicines(prev => {
+                      const updated = new Set(prev);
+                      updated.add(medicine.id);
+                      return updated;
+                    });
+                    // Show confirmation toast
+                    toast(
+                      <div className="flex items-center gap-3">
+                        <Bell className="text-green-500" />
+                        <div>
+                          <p className="font-medium">Medicine Taken</p>
+                          <p className="text-sm text-muted-foreground">You've taken {medicine.name}</p>
+                        </div>
+                      </div>,
+                      { duration: 3000 }
+                    );
                   }
                 },
               },
@@ -176,7 +210,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
     }
     
     return () => clearInterval(interval);
-  }, [medicines, checkedMedicines, missedMedicines, onMedicineTaken]);
+  }, [medicines, checkedMedicines, missedMedicines, takenMedicines, onMedicineTaken]);
   
   return null; // This is a background component with no UI
 };
