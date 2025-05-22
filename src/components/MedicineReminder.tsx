@@ -7,6 +7,7 @@ interface Medicine {
   id: string;
   name: string;
   time: string;
+  days: string[];
 }
 
 interface MedicineReminderProps {
@@ -22,6 +23,20 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
   const [missedMedicines, setMissedMedicines] = useState<Set<string>>(new Set());
   const [takenMedicines, setTakenMedicines] = useState<Set<string>>(new Set());
   
+  // Get current day of the week
+  const getCurrentDayOfWeek = (): string => {
+    const dayMap: Record<number, string> = {
+      0: "sunday",
+      1: "monday",
+      2: "tuesday",
+      3: "wednesday",
+      4: "thursday",
+      5: "friday",
+      6: "saturday"
+    };
+    return dayMap[new Date().getDay()];
+  };
+  
   useEffect(() => {
     // Reset states when medicines prop changes
     setCheckedMedicines(new Set());
@@ -36,10 +51,14 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
       
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const currentDay = getCurrentDayOfWeek();
       
       medicines.forEach(medicine => {
         // Skip if already taken
         if (takenMedicines.has(medicine.id)) return;
+        
+        // Skip if medicine is not scheduled for today
+        if (!medicine.days || !medicine.days.includes(currentDay)) return;
         
         const [medHour, medMin] = medicine.time.split(':').map(Number);
         const medTime = new Date();
@@ -102,6 +121,7 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
           }
         }
         
+        // If current time matches medicine time and not taken
         if (medicine.time === currentTime && !takenMedicines.has(medicine.id)) {
           // Add to checked medicines
           setCheckedMedicines(prev => {
@@ -155,9 +175,13 @@ const MedicineReminder: React.FC<MedicineReminderProps> = ({
     // Also check immediately on mount or when medicines change
     if (medicines && medicines.length > 0) {
       const now = new Date();
+      const currentDay = getCurrentDayOfWeek();
       
       medicines.forEach(medicine => {
         if (takenMedicines.has(medicine.id)) return; // Skip if already taken
+        
+        // Skip if medicine is not scheduled for today
+        if (!medicine.days || !medicine.days.includes(currentDay)) return;
         
         const [medHour, medMin] = medicine.time.split(':').map(Number);
         const medTime = new Date();
