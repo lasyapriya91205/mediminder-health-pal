@@ -111,6 +111,7 @@ export type Database = {
       medications: {
         Row: {
           created_at: string
+          days: string[] | null
           description: string | null
           dosage: string
           id: string
@@ -121,6 +122,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          days?: string[] | null
           description?: string | null
           dosage: string
           id?: string
@@ -131,6 +133,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          days?: string[] | null
           description?: string | null
           dosage?: string
           id?: string

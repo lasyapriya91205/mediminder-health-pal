@@ -25,7 +25,14 @@ const DAYS_OF_WEEK = [
 ];
 
 interface MedicineFormProps {
-  medicine?: any;
+  medicine?: {
+    id?: string;
+    name: string;
+    description?: string | null;
+    dosage: string;
+    time: string;
+    days?: string[];
+  };
   onSave: (medicine: any) => void;
   onCancel: () => void;
 }
