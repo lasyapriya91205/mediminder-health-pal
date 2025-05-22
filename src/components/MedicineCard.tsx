@@ -15,9 +15,11 @@ interface MedicineCardProps {
     description: string | null;
     dosage: string;
     time: string;
+    days?: string[];
     imageUrl: string;
   };
   isActive: boolean;
+  selectedDay?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   onTakeMedicine?: () => void;
@@ -26,6 +28,7 @@ interface MedicineCardProps {
 const MedicineCard: React.FC<MedicineCardProps> = ({ 
   medicine, 
   isActive, 
+  selectedDay,
   onEdit, 
   onDelete,
   onTakeMedicine 
@@ -34,6 +37,14 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [medicineImage, setMedicineImage] = useState<string>("/placeholder.svg");
+
+  // Format days for display
+  const formatDays = (days?: string[]) => {
+    if (!days || days.length === 0) return "No days set";
+    if (days.length === 7) return "Every day";
+    
+    return days.map(day => day.charAt(0).toUpperCase() + day.slice(1, 3)).join(", ");
+  };
   
   useEffect(() => {
     const fetchMedicineImage = async () => {
@@ -124,6 +135,14 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
     return <Clock className="text-slate-400" />;
   };
 
+  // Format time to 12-hour format for display
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
   return (
     <div className={`flex flex-col md:flex-row gap-4 p-4 rounded-lg border ${taken ? 'border-green-100 bg-green-50/30' : isActive ? 'border-teal-100 bg-teal-50' : 'border-slate-100'} ${taken ? 'opacity-70' : ''}`}>
       <div className="md:w-1/4 flex-shrink-0 relative">
@@ -186,8 +205,13 @@ const MedicineCard: React.FC<MedicineCardProps> = ({
             {medicine.dosage}
           </span>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-lavender-100 text-lavender-800">
-            {medicine.time}
+            {formatTime(medicine.time)}
           </span>
+          {medicine.days && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-peach-100 text-peach-800">
+              {formatDays(medicine.days)}
+            </span>
+          )}
         </div>
       </div>
       

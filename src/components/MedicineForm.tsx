@@ -4,6 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+
+const DAYS_OF_WEEK = [
+  { id: "monday", label: "Monday" },
+  { id: "tuesday", label: "Tuesday" },
+  { id: "wednesday", label: "Wednesday" },
+  { id: "thursday", label: "Thursday" },
+  { id: "friday", label: "Friday" },
+  { id: "saturday", label: "Saturday" },
+  { id: "sunday", label: "Sunday" }
+];
 
 interface MedicineFormProps {
   medicine?: any;
@@ -20,6 +39,7 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
   const [description, setDescription] = useState('');
   const [dosage, setDosage] = useState('');
   const [time, setTime] = useState('');
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   useEffect(() => {
@@ -28,8 +48,22 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
       setDescription(medicine.description || '');
       setDosage(medicine.dosage || '');
       setTime(medicine.time || '');
+      setSelectedDays(medicine.days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+    } else {
+      // Default to all days selected for new medications
+      setSelectedDays(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
     }
   }, [medicine]);
+  
+  const toggleDay = (day: string) => {
+    setSelectedDays(prev => {
+      if (prev.includes(day)) {
+        return prev.filter(d => d !== day);
+      } else {
+        return [...prev, day];
+      }
+    });
+  };
   
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -52,6 +86,10 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
       }
     }
     
+    if (selectedDays.length === 0) {
+      newErrors.days = 'Select at least one day';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -64,7 +102,8 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
         name,
         description,
         dosage,
-        time
+        time,
+        days: selectedDays
       });
     }
   };
@@ -113,6 +152,23 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
           onChange={(e) => setTime(e.target.value)}
         />
         {errors.time && <p className="text-sm text-red-500">{errors.time}</p>}
+      </div>
+      
+      <div className="space-y-2">
+        <Label>Days of the week</Label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {DAYS_OF_WEEK.map((day) => (
+            <div key={day.id} className="flex items-center space-x-2">
+              <Checkbox 
+                id={day.id} 
+                checked={selectedDays.includes(day.id)} 
+                onCheckedChange={() => toggleDay(day.id)} 
+              />
+              <Label htmlFor={day.id} className="cursor-pointer">{day.label}</Label>
+            </div>
+          ))}
+        </div>
+        {errors.days && <p className="text-sm text-red-500">{errors.days}</p>}
       </div>
       
       <div className="flex justify-end gap-2 pt-2">

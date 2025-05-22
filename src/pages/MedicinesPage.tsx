@@ -5,7 +5,7 @@ import Navigation from '../components/Navigation';
 import MedicineCard from '../components/MedicineCard';
 import MedicineForm from '../components/MedicineForm';
 import MedicineReminder from '../components/MedicineReminder';
-import { Calendar, Plus } from 'lucide-react';
+import { Calendar, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,6 +21,17 @@ interface MedicationRecordDetails {
   taken_at: string;
 }
 
+// Array of days in a week
+const DAYS_OF_WEEK = [
+  { id: "monday", label: "Monday" },
+  { id: "tuesday", label: "Tuesday" },
+  { id: "wednesday", label: "Wednesday" },
+  { id: "thursday", label: "Thursday" },
+  { id: "friday", label: "Friday" },
+  { id: "saturday", label: "Saturday" },
+  { id: "sunday", label: "Sunday" }
+];
+
 const MedicinesPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -32,6 +43,22 @@ const MedicinesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<any>(null);
+  
+  // Add state for selected day
+  const [selectedDay, setSelectedDay] = useState<string>(() => {
+    const today = new Date().getDay();
+    // Convert JS day (0-6, starting Sunday) to our day format
+    const dayMap: Record<number, string> = {
+      0: "sunday",
+      1: "monday",
+      2: "tuesday",
+      3: "wednesday",
+      4: "thursday",
+      5: "friday",
+      6: "saturday"
+    };
+    return dayMap[today];
+  });
   
   if (!user) {
     return <Navigate to="/auth" />;
@@ -53,6 +80,8 @@ const MedicinesPage = () => {
         
         const medicationsWithImages = data.map(med => ({
           ...med,
+          // Default to all days if none specified
+          days: med.days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
           imageUrl: "/placeholder.svg"
         }));
         
@@ -109,10 +138,20 @@ const MedicinesPage = () => {
     return () => clearInterval(interval);
   }, [user, toast]);
   
+  // Filter medications by selected day
   useEffect(() => {
-    const filteredMedicines = medicines.filter(med => !takenMedicines.has(med.id));
-    setVisibleMedicines(filteredMedicines);
-  }, [medicines, takenMedicines]);
+    if (!medicines.length) {
+      setVisibleMedicines([]);
+      return;
+    }
+    
+    const filteredByDay = medicines.filter(med => 
+      med.days && med.days.includes(selectedDay)
+    );
+    
+    const filteredByTaken = filteredByDay.filter(med => !takenMedicines.has(med.id));
+    setVisibleMedicines(filteredByTaken);
+  }, [medicines, takenMedicines, selectedDay]);
   
   useEffect(() => {
     const now = currentTime;
@@ -164,6 +203,7 @@ const MedicinesPage = () => {
             dosage: medicineData.dosage,
             description: medicineData.description,
             time: medicineData.time,
+            days: medicineData.days,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingMedicine.id);
@@ -195,7 +235,8 @@ const MedicinesPage = () => {
               name: medicineData.name,
               dosage: medicineData.dosage,
               description: medicineData.description,
-              time: medicineData.time
+              time: medicineData.time,
+              days: medicineData.days
             }
           ])
           .select();
@@ -292,6 +333,20 @@ const MedicinesPage = () => {
     }
   };
 
+  // Find today's day index in our DAYS_OF_WEEK array
+  const currentDayIndex = DAYS_OF_WEEK.findIndex(day => day.id === selectedDay);
+  
+  // Handle day navigation
+  const goToPreviousDay = () => {
+    const prevIndex = (currentDayIndex - 1 + DAYS_OF_WEEK.length) % DAYS_OF_WEEK.length;
+    setSelectedDay(DAYS_OF_WEEK[prevIndex].id);
+  };
+  
+  const goToNextDay = () => {
+    const nextIndex = (currentDayIndex + 1) % DAYS_OF_WEEK.length;
+    setSelectedDay(DAYS_OF_WEEK[nextIndex].id);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
@@ -313,9 +368,43 @@ const MedicinesPage = () => {
             </Button>
           </div>
           
+          {/* Day selector */}
+          <div className="flex justify-center items-center mb-6 gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={goToPreviousDay}
+            >
+              <ChevronLeft size={16} />
+            </Button>
+            
+            <div className="flex overflow-x-auto gap-1 py-2 scrollbar-hide">
+              {DAYS_OF_WEEK.map((day) => (
+                <Button
+                  key={day.id}
+                  variant={selectedDay === day.id ? "default" : "outline"}
+                  className={`px-4 min-w-[90px] ${selectedDay === day.id ? "bg-teal-500 text-white" : ""}`}
+                  onClick={() => setSelectedDay(day.id)}
+                >
+                  {day.label}
+                </Button>
+              ))}
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={goToNextDay}
+            >
+              <ChevronRight size={16} />
+            </Button>
+          </div>
+          
           <Card className="mb-8">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl text-slate-800">Today's Medications</CardTitle>
+              <CardTitle className="text-xl text-slate-800">
+                Medications for {DAYS_OF_WEEK.find(day => day.id === selectedDay)?.label}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -329,6 +418,7 @@ const MedicinesPage = () => {
                       key={medicine.id}
                       medicine={medicine}
                       isActive={medicine.id === activeMedicineId}
+                      selectedDay={selectedDay}
                       onEdit={() => handleEditMedicine(medicine)}
                       onDelete={() => handleDeleteMedicine(medicine.id)}
                       onTakeMedicine={() => handleMedicineTaken(medicine)}
@@ -337,8 +427,18 @@ const MedicinesPage = () => {
                 </div>
               ) : medicines.length > 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-green-600 font-medium">Great job! All medications for today have been taken.</p>
-                  <p className="text-sm text-slate-500 mt-1">Your next medications will appear here tomorrow.</p>
+                  <p className="text-slate-600">
+                    {takenMedicines.size > 0 
+                      ? "All medications for today have been taken."
+                      : `No medications scheduled for ${DAYS_OF_WEEK.find(day => day.id === selectedDay)?.label}.`
+                    }
+                  </p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {takenMedicines.size > 0 
+                      ? "Great job! Your next medications will appear here tomorrow."
+                      : "Click the \"Add Medicine\" button to schedule medications for this day."
+                    }
+                  </p>
                 </div>
               ) : (
                 <div className="text-center py-8">
