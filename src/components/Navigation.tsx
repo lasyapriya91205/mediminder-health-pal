@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Calendar, FileText, Settings, User, LogIn, LogOut, Menu, X } from 'lucide-react';
+import { Home, Calendar, FileText, User, LogIn, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from "@/components/ui/button";
 
@@ -59,13 +59,6 @@ const Navigation = () => {
             }>
               <FileText size={18} />
               <span>Medical History</span>
-            </NavLink>
-            
-            <NavLink to="/settings" className={({ isActive }) => 
-              isActive ? "nav-link-active" : "nav-link"
-            }>
-              <Settings size={18} />
-              <span>Settings</span>
             </NavLink>
             
             {user && (
@@ -140,15 +133,6 @@ const Navigation = () => {
               >
                 <FileText size={18} />
                 <span>Medical History</span>
-              </NavLink>
-              
-              <NavLink 
-                to="/settings" 
-                className={({ isActive }) => isActive ? "nav-link-active" : "nav-link"}
-                onClick={closeMobileMenu}
-              >
-                <Settings size={18} />
-                <span>Settings</span>
               </NavLink>
               
               {user && (

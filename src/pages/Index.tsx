@@ -302,7 +302,7 @@ const Index = () => {
                 </Card>
               </div>
               
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <Card className="shadow-sm border-teal-100 hover:shadow-md transition-shadow duration-200">
                   <CardContent className="p-6 flex flex-col items-center text-center">
                     <div className="bg-teal-100 p-3 rounded-full mb-4">
@@ -311,17 +311,6 @@ const Index = () => {
                     <h3 className="font-medium text-slate-800 mb-2">Manage Medications</h3>
                     <p className="text-sm text-slate-500 mb-4">Add, edit or remove your medications and schedule.</p>
                     <Link to="/medicines" className="text-teal-500 text-sm font-medium hover:underline">View Medications</Link>
-                  </CardContent>
-                </Card>
-                
-                <Card className="shadow-sm border-lavender-100 hover:shadow-md transition-shadow duration-200">
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className="bg-lavender-100 p-3 rounded-full mb-4">
-                      <FileText className="text-lavender-600" size={24} />
-                    </div>
-                    <h3 className="font-medium text-slate-800 mb-2">Medical History</h3>
-                    <p className="text-sm text-slate-500 mb-4">View and update your medical history and documents.</p>
-                    <Link to="/history" className="text-lavender-500 text-sm font-medium hover:underline">View History</Link>
                   </CardContent>
                 </Card>
                 
