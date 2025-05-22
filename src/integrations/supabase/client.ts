@@ -12,16 +12,20 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: localStorage
   },
   global: {
     // Add sensible fetch timeout
-    fetch: (...args) => {
-      const [url, options] = args;
-      const fetchPromise = fetch(url, { ...options, cache: 'no-store' });
-      const timeoutPromise = new Promise((_, reject) => {
+    fetch: (url, options) => {
+      const fetchOptions = {
+        ...options,
+        cache: 'no-store' as RequestCache
+      };
+      const fetchPromise = fetch(url, fetchOptions);
+      const timeoutPromise = new Promise<Response>((_, reject) => {
         setTimeout(() => reject(new Error('Request timeout')), 10000);
       });
-      return Promise.race([fetchPromise, timeoutPromise]) as Promise<Response>;
+      return Promise.race([fetchPromise, timeoutPromise]);
     },
   },
 });
